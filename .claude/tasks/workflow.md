@@ -101,7 +101,7 @@ git add . && git commit -m "feat: {Feature Name}"
 ## 啟動
 
 ```bash
-/ralph-loop --max-iterations 50
+/ralph-loop --max-iterations 20
 ```
 
 當 MVP 完成時輸出：

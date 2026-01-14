@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import { globalIgnores } from 'eslint/config'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'coverage']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -18,6 +18,13 @@ export default tseslint.config([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+    },
+    rules: {
+      // shadcn/ui 組件會匯出 buttonVariants，這是預期行為
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowExportNames: ['buttonVariants'] },
+      ],
     },
   },
 ])

@@ -26,7 +26,7 @@ Mac 狀態列計時器應用，可設定倒數時間，時間到時提醒但繼�
 - 點擊 Tray 開啟計時器視窗（popover 樣式）
 - Tray 圖示動態顯示剩餘時間
 
-### P3: 計時器核心邏輯 `[BACKLOG]`
+### P3: 計時器核心邏輯 `[COMPLETED]`
 - 建立 `shared/types.ts` 型別定義
 - 實作 `useTimer` hook（開始/暫停/停止/重置）
 - 時間到達後繼續計時（超時模式）
@@ -74,6 +74,14 @@ Mac 狀態列計時器應用，可設定倒數時間，時間到時提醒但繼�
 - ✅ 實作 popover 視窗
 - ✅ 支援動態更新 Tray 標題
 - ✅ 測試覆蓋率 ≥95%
+
+### P3: 計時器核心邏輯 (2025-01-15)
+- ✅ 建立 shared/types.ts 型別定義
+- ✅ 實作 TimerService 類別（start/pause/resume/stop/reset）
+- ✅ 實作 IPC 通訊處理器（timerHandlers）
+- ✅ 更新 preload.ts 暴露計時器 API
+- ✅ 實作 useTimer hook
+- ✅ 測試覆蓋率 ≥95%（main: 99.56%, renderer: 100%）
 
 ## 失敗記錄
 

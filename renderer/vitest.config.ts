@@ -1,24 +1,25 @@
 import { defineConfig } from 'vitest/config'
-import { resolve } from 'path'
+import react from '@vitejs/plugin-react'
+import path from 'node:path'
 
 export default defineConfig({
+  plugins: [react()],
   test: {
     globals: true,
-    environment: 'node',
-    include: ['main/**/*.{test,spec}.{ts,tsx}', 'shared/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['node_modules', 'dist', 'renderer/**'],
+    environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['main/**/*.ts', 'shared/**/*.ts'],
       exclude: [
-        'node_modules',
-        'dist',
+        'node_modules/**',
+        'dist/**',
         '**/*.d.ts',
-        '**/*.config.ts',
-        '**/types.ts',
+        '**/*.config.*',
+        '**/index.ts',
         '**/__tests__/**',
-        '**/icons/**',
+        'vitest.setup.ts',
       ],
       thresholds: {
         statements: 95,
@@ -30,7 +31,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'renderer/src'),
+      '@': path.resolve(__dirname, './src'),
     },
   },
 })

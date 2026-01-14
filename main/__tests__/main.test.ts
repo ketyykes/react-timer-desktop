@@ -1,31 +1,26 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+// Mock TrayManager - 使用可變物件追蹤回呼
+const mockTrayManagerInstance = {
+  initialize: vi.fn(),
+  destroy: vi.fn(),
+  onStart: null as (() => void) | null,
+  onPause: null as (() => void) | null,
+  onStop: null as (() => void) | null,
+}
+
+vi.mock('../tray/TrayManager', () => ({
+  TrayManager: vi.fn().mockImplementation(() => mockTrayManagerInstance),
+}))
+
 // Mock Electron modules
 const mockLoadURL = vi.fn()
 const mockLoadFile = vi.fn()
-const mockGetAllWindows = vi.fn(() => [])
 const mockQuit = vi.fn()
 const mockOn = vi.fn()
 const mockWhenReady = vi.fn(() => Promise.resolve())
 
-vi.mock('electron', () => ({
-  app: {
-    whenReady: mockWhenReady,
-    on: mockOn,
-    quit: mockQuit,
-  },
-  BrowserWindow: vi.fn().mockImplementation(() => ({
-    loadURL: mockLoadURL,
-    loadFile: mockLoadFile,
-    on: vi.fn(),
-    show: vi.fn(),
-    hide: vi.fn(),
-    close: vi.fn(),
-  })),
-}))
-
-// 讓 BrowserWindow.getAllWindows 可以被 mock
-vi.mock('electron', async () => {
+vi.mock('electron', () => {
   const BrowserWindowMock = vi.fn().mockImplementation(() => ({
     loadURL: mockLoadURL,
     loadFile: mockLoadFile,
@@ -34,8 +29,6 @@ vi.mock('electron', async () => {
     hide: vi.fn(),
     close: vi.fn(),
   }))
-  // 添加靜態方法
-  ;(BrowserWindowMock as unknown as { getAllWindows: typeof mockGetAllWindows }).getAllWindows = mockGetAllWindows
 
   return {
     app: {
@@ -62,6 +55,10 @@ describe('main/main.ts', () => {
     vi.clearAllMocks()
     vi.resetModules()
     process.env.NODE_ENV = 'test' // 防止 initializeApp 自動執行
+    // 重設 mock 實例狀態
+    mockTrayManagerInstance.onStart = null
+    mockTrayManagerInstance.onPause = null
+    mockTrayManagerInstance.onStop = null
   })
 
   afterEach(() => {
@@ -147,44 +144,87 @@ describe('main/main.ts', () => {
     })
   })
 
-  describe('handleActivate', () => {
-    it('沒有視窗時應建立新視窗', async () => {
-      mockGetAllWindows.mockReturnValue([])
-      const { handleActivate } = await import('../main')
-      const { BrowserWindow } = await import('electron')
-
-      handleActivate()
-
-      expect(BrowserWindow).toHaveBeenCalled()
+  describe('initializeTray', () => {
+    it('應匯出 initializeTray 函式', async () => {
+      const { initializeTray } = await import('../main')
+      expect(typeof initializeTray).toBe('function')
     })
 
-    it('有視窗時不應建立新視窗', async () => {
-      mockGetAllWindows.mockReturnValue([{}])
-      vi.resetModules()
+    it('應建立並初始化 TrayManager', async () => {
+      const { TrayManager } = await import('../tray/TrayManager')
+      const { initializeTray } = await import('../main')
+
+      const manager = initializeTray()
+
+      expect(TrayManager).toHaveBeenCalled()
+      expect(manager.initialize).toHaveBeenCalled()
+    })
+
+    it('應設定 onStart 回呼', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      const { initializeTray } = await import('../main')
+
+      initializeTray()
+
+      // 檢查回呼已被設定
+      expect(mockTrayManagerInstance.onStart).not.toBeNull()
+
+      // 執行回呼
+      mockTrayManagerInstance.onStart?.()
+
+      expect(consoleSpy).toHaveBeenCalledWith('Timer start requested')
+      consoleSpy.mockRestore()
+    })
+
+    it('應設定 onPause 回呼', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      const { initializeTray } = await import('../main')
+
+      initializeTray()
+
+      expect(mockTrayManagerInstance.onPause).not.toBeNull()
+      mockTrayManagerInstance.onPause?.()
+
+      expect(consoleSpy).toHaveBeenCalledWith('Timer pause requested')
+      consoleSpy.mockRestore()
+    })
+
+    it('應設定 onStop 回呼', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      const { initializeTray } = await import('../main')
+
+      initializeTray()
+
+      expect(mockTrayManagerInstance.onStop).not.toBeNull()
+      mockTrayManagerInstance.onStop?.()
+
+      expect(consoleSpy).toHaveBeenCalledWith('Timer stop requested')
+      consoleSpy.mockRestore()
+    })
+  })
+
+  describe('handleActivate', () => {
+    it('對於 Tray 應用不應執行任何操作', async () => {
       const { handleActivate } = await import('../main')
-      const { BrowserWindow } = await import('electron')
 
-      const callCountBefore = (BrowserWindow as unknown as { mock: { calls: unknown[] } }).mock.calls.length
-      handleActivate()
-      const callCountAfter = (BrowserWindow as unknown as { mock: { calls: unknown[] } }).mock.calls.length
-
-      // 呼叫次數應相同（因為 handleActivate 不應建立新視窗）
-      expect(callCountAfter - callCountBefore).toBe(0)
+      // handleActivate 現在是空函式，因為 Tray 應用不需要處理 activate
+      expect(() => handleActivate()).not.toThrow()
     })
   })
 
   describe('handleWindowAllClosed', () => {
-    it('非 macOS 平台應呼叫 app.quit', async () => {
+    it('對於 Tray 應用不應退出', async () => {
       Object.defineProperty(process, 'platform', { value: 'win32' })
       vi.resetModules()
       const { handleWindowAllClosed } = await import('../main')
 
       handleWindowAllClosed()
 
-      expect(mockQuit).toHaveBeenCalled()
+      // Tray 應用關閉視窗不應該退出
+      expect(mockQuit).not.toHaveBeenCalled()
     })
 
-    it('macOS 平台不應呼叫 app.quit', async () => {
+    it('macOS 平台也不應退出', async () => {
       Object.defineProperty(process, 'platform', { value: 'darwin' })
       vi.resetModules()
       const { handleWindowAllClosed } = await import('../main')
@@ -192,6 +232,13 @@ describe('main/main.ts', () => {
       handleWindowAllClosed()
 
       expect(mockQuit).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('getTrayManager', () => {
+    it('初始化前應回傳 null', async () => {
+      const { getTrayManager } = await import('../main')
+      expect(getTrayManager()).toBeNull()
     })
   })
 
@@ -210,6 +257,30 @@ describe('main/main.ts', () => {
       initializeApp()
 
       expect(mockOn).toHaveBeenCalledWith('window-all-closed', expect.any(Function))
+    })
+
+    it('應註冊 before-quit 事件', async () => {
+      const { initializeApp } = await import('../main')
+
+      initializeApp()
+
+      expect(mockOn).toHaveBeenCalledWith('before-quit', expect.any(Function))
+    })
+
+    it('before-quit 回呼應能正常執行', async () => {
+      const { initializeApp } = await import('../main')
+
+      initializeApp()
+
+      // 取得 before-quit 回呼
+      const beforeQuitCall = mockOn.mock.calls.find(
+        (call: [string, () => void]) => call[0] === 'before-quit'
+      )
+      const beforeQuitCallback = beforeQuitCall?.[1]
+
+      // 確保回呼存在且能正常執行不拋出錯誤
+      expect(beforeQuitCallback).toBeDefined()
+      expect(() => beforeQuitCallback?.()).not.toThrow()
     })
   })
 })

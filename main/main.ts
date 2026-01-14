@@ -1,5 +1,9 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
+import { TrayManager } from './tray/TrayManager'
+
+// TrayManager 實例
+let trayManager: TrayManager | null = null
 
 /**
  * 取得 preload script 路徑
@@ -60,21 +64,55 @@ export function createWindow(): BrowserWindow {
 }
 
 /**
+ * 初始化 TrayManager
+ */
+export function initializeTray(): TrayManager {
+  const manager = new TrayManager()
+  manager.initialize()
+
+  // 設定事件回呼（後續 P3 實作計時器邏輯時使用）
+  manager.onStart = () => {
+    console.log('Timer start requested')
+    // TODO: P3 - 實作計時器啟動邏輯
+  }
+
+  manager.onPause = () => {
+    console.log('Timer pause requested')
+    // TODO: P3 - 實作計時器暫停邏輯
+  }
+
+  manager.onStop = () => {
+    console.log('Timer stop requested')
+    // TODO: P3 - 實作計時器停止邏輯
+  }
+
+  return manager
+}
+
+/**
  * 處理 macOS activate 事件
  */
 export function handleActivate(): void {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
-  }
+  // 對於 Tray 應用，不需要重新建立視窗
+  // 使用者點擊 Tray 圖示即可開啟視窗
 }
 
 /**
  * 處理所有視窗關閉事件
  */
 export function handleWindowAllClosed(): void {
+  // 對於 Tray 應用，關閉視窗不應該退出應用
+  // 應用應該繼續在狀態列運行
   if (process.platform !== 'darwin') {
-    app.quit()
+    // 在 Windows/Linux 上也保持運行
   }
+}
+
+/**
+ * 取得 TrayManager 實例
+ */
+export function getTrayManager(): TrayManager | null {
+  return trayManager
 }
 
 /**
@@ -82,11 +120,19 @@ export function handleWindowAllClosed(): void {
  */
 export function initializeApp(): void {
   app.whenReady().then(() => {
-    createWindow()
+    // 初始化 Tray（替代原本的視窗建立）
+    trayManager = initializeTray()
+
     app.on('activate', handleActivate)
   })
 
   app.on('window-all-closed', handleWindowAllClosed)
+
+  // 應用退出前清理
+  app.on('before-quit', () => {
+    trayManager?.destroy()
+    trayManager = null
+  })
 }
 
 // 只在非測試環境下自動啟動

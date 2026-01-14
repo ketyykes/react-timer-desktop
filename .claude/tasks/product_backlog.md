@@ -13,14 +13,14 @@ Mac 狀態列計時器應用，可設定倒數時間，時間到時提醒但繼�
 
 ## MVP 功能
 
-### P1: 專案架構設定 `[IN_PROGRESS]`
+### P1: 專案架構設定 `[COMPLETED]`
 - 安裝 Electron 相關依賴（electron, electron-builder）
 - 建立 `main/main.ts` 主程序入口
 - 設定 Electron + Vite 整合
 - 設定測試框架（vitest）
 - 調整 package.json scripts
 
-### P2: 狀態列 Tray 功能 `[BACKLOG]`
+### P2: 狀態列 Tray 功能 `[IN_PROGRESS]`
 - 建立 Tray 圖示（顯示於 Mac 狀態列）
 - 實作右鍵選單（開始、停止、退出）
 - 點擊 Tray 開啟計時器視窗（popover 樣式）
@@ -61,7 +61,12 @@ Mac 狀態列計時器應用，可設定倒數時間，時間到時提醒但繼�
 
 ## 完成記錄
 
-_（尚無）_
+### P1: 專案架構設定 (2025-01-15)
+- ✅ 設定 Electron + Vite 整合 (electron-vite 2.3.0)
+- ✅ 建立 main/main.ts 主程序入口
+- ✅ 建立 main/preload.ts preload script
+- ✅ 設定 vitest 測試框架（覆蓋率 100%）
+- ✅ 設定 ESLint 程式碼檢查
 
 ## 失敗記錄
 

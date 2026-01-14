@@ -70,7 +70,7 @@ pnpm test && pnpm test:coverage && pnpm lint
 
 ### Step 6: Deployment 🟢
 ```bash
-git add . && git commit -m "feat: {Feature Name}" && git push
+git add . && git commit -m "feat: {Feature Name}"
 ```
 - 標記 `[COMPLETED]`
 

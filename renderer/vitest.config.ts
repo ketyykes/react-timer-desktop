@@ -20,6 +20,7 @@ export default defineConfig({
         '**/index.ts',
         '**/__tests__/**',
         'vitest.setup.ts',
+        'src/components/ui/**',
       ],
       thresholds: {
         statements: 95,

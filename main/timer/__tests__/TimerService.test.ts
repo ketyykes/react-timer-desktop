@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TimerService, TimerEventCallbacks } from '../TimerService'
-import { TimerState } from '../../../shared/types'
 
 describe('TimerService', () => {
   let timerService: TimerService

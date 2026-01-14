@@ -37,7 +37,11 @@
 - 測試案例清單
 
 ### Step 3: Implementation 🛠️ (TDD)
-1. `git checkout -b feat/{feature-name}`
+1. 從 main 分支建立 feature 分支：
+   ```bash
+   git checkout main
+   git checkout -b feat/{feature-name}
+   ```
 2. **先寫測試** (failing tests)
 3. 實作功能讓測試通過
 4. 重構（如需要）
@@ -63,14 +67,18 @@ pnpm test && pnpm test:coverage && pnpm lint
 4. 回到 Step 4
 
 **失敗 5 次後**：
-- `git checkout main && git branch -D feat/{feature-name}`
-- `git reset --hard HEAD`
+```bash
+git checkout main
+git branch -D feat/{feature-name}
+```
 - 標記 `[FAILED]`，記錄失敗原因
 - 回到 Step 1
 
 ### Step 6: Deployment 🟢
 ```bash
 git add . && git commit -m "feat: {Feature Name}"
+git checkout main
+git merge feat/{feature-name}
 ```
 - 標記 `[COMPLETED]`
 

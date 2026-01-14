@@ -1,5 +1,5 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import { IPC_CHANNELS, TimerData, TimerState } from '../../shared/types'
+import { IPC_CHANNELS } from '../../shared/types'
 import { TimerService } from '../timer/TimerService'
 
 /**

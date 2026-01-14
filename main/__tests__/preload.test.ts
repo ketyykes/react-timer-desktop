@@ -226,15 +226,15 @@ describe('main/preload.ts', () => {
 
   describe('型別匯出', () => {
     it('應匯出 TimerStateChangeData 型別', async () => {
-      const { TimerStateChangeData } = await import('../preload') as any
+      const module = await import('../preload')
       // 型別只存在於編譯時，這裡只是確認模組可以正確載入
-      expect(true).toBe(true)
+      expect(module).toBeDefined()
     })
 
     it('應匯出 TimerCompleteData 型別', async () => {
-      const { TimerCompleteData } = await import('../preload') as any
+      const module = await import('../preload')
       // 型別只存在於編譯時，這裡只是確認模組可以正確載入
-      expect(true).toBe(true)
+      expect(module).toBeDefined()
     })
   })
 })

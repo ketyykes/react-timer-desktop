@@ -20,7 +20,7 @@ Mac 狀態列計時器應用，可設定倒數時間，時間到時提醒但繼�
 - 設定測試框架（vitest）
 - 調整 package.json scripts
 
-### P2: 狀態列 Tray 功能 `[IN_PROGRESS]`
+### P2: 狀態列 Tray 功能 `[COMPLETED]`
 - 建立 Tray 圖示（顯示於 Mac 狀態列）
 - 實作右鍵選單（開始、停止、退出）
 - 點擊 Tray 開啟計時器視窗（popover 樣式）
@@ -67,6 +67,13 @@ Mac 狀態列計時器應用，可設定倒數時間，時間到時提醒但繼�
 - ✅ 建立 main/preload.ts preload script
 - ✅ 設定 vitest 測試框架（覆蓋率 100%）
 - ✅ 設定 ESLint 程式碼檢查
+
+### P2: 狀態列 Tray 功能 (2025-01-15)
+- ✅ 實作 TrayManager 類別
+- ✅ 實作右鍵選單（開始計時、暫停、停止、退出）
+- ✅ 實作 popover 視窗
+- ✅ 支援動態更新 Tray 標題
+- ✅ 測試覆蓋率 ≥95%
 
 ## 失敗記錄
 

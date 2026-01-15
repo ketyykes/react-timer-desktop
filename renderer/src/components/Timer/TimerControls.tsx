@@ -27,35 +27,27 @@ export function TimerControls({
   onStop,
 }: TimerControlsProps) {
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-3 justify-center">
       {state === 'idle' && (
         <Button onClick={onStart}>開始</Button>
       )}
 
       {state === 'running' && (
         <>
-          <Button variant="secondary" onClick={onPause}>
-            暫停
-          </Button>
-          <Button variant="destructive" onClick={onStop}>
-            停止
-          </Button>
+          <Button variant="outline" onClick={onPause}>暫停</Button>
+          <Button variant="destructive" onClick={onStop}>停止</Button>
         </>
       )}
 
       {state === 'paused' && (
         <>
           <Button onClick={onResume}>繼續</Button>
-          <Button variant="destructive" onClick={onStop}>
-            停止
-          </Button>
+          <Button variant="destructive" onClick={onStop}>停止</Button>
         </>
       )}
 
       {state === 'overtime' && (
-        <Button variant="destructive" onClick={onStop}>
-          停止
-        </Button>
+        <Button variant="destructive" onClick={onStop}>停止</Button>
       )}
     </div>
   )

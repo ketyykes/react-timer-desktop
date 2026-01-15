@@ -289,7 +289,7 @@ describe('TimerService', () => {
   })
 
   describe('setCallbacks()', () => {
-    it('應能設定新的 callbacks', () => {
+    it('應能合併新的 callbacks（不覆蓋舊的）', () => {
       const newCallbacks: TimerEventCallbacks = {
         onTick: vi.fn(),
       }
@@ -297,8 +297,10 @@ describe('TimerService', () => {
       timerService.setCallbacks(newCallbacks)
       timerService.start(60000)
 
+      // 新的 callback 應被呼叫
       expect(newCallbacks.onTick).toHaveBeenCalled()
-      expect(mockCallbacks.onTick).not.toHaveBeenCalled()
+      // 舊的 callback 也應被呼叫（合併模式）
+      expect(mockCallbacks.onTick).toHaveBeenCalled()
     })
   })
 

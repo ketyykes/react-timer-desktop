@@ -37,37 +37,32 @@ export class TrayManager {
    * 取得 Tray 圖示路徑
    */
   private getIconPath(): string {
-    // 在開發模式使用原始碼路徑，生產模式使用打包後路徑
+    // 開發模式：從專案根目錄載入
+    // 生產模式：從 app 路徑載入
     const isDev = process.env.NODE_ENV === 'development'
-    const basePath = isDev ? __dirname : app.getAppPath()
-    return path.join(basePath, 'tray', 'icons', 'tray-icon.png')
+    if (isDev) {
+      // 開發模式下 __dirname 是 dist/main，需要回到專案根目錄
+      return path.join(__dirname, '..', '..', 'main', 'tray', 'icons', 'tray-icon.png')
+    }
+    return path.join(app.getAppPath(), 'main', 'tray', 'icons', 'tray-icon.png')
   }
 
   /**
    * 建立 Tray 圖示
-   * 使用程式碼繪製一個簡單的計時器圖示
+   * macOS menu bar 標準大小為 16x16 或 22x22
    */
   private createTrayIcon(): Electron.NativeImage {
     const iconPath = this.getIconPath()
     let icon = nativeImage.createFromPath(iconPath)
 
-    // 如果圖示載入失敗，建立一個計時器模板圖示
+    // 如果載入失敗，使用空圖示
     if (icon.isEmpty()) {
-      // 建立 22x22 的模板圖示 (macOS 狀態列標準大小)
-      // 使用 Data URL 建立一個簡單的圓形計時器圖示
-      const size = 22
-      const canvas = `
-        <svg width="${size}" height="${size}" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="11" cy="12" r="8" stroke="black" stroke-width="1.5" fill="none"/>
-          <line x1="11" y1="12" x2="11" y2="7" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="11" y1="12" x2="14" y2="12" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="11" y1="3" x2="11" y2="4" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      `
-      const dataUrl = `data:image/svg+xml;base64,${Buffer.from(canvas).toString('base64')}`
-      icon = nativeImage.createFromDataURL(dataUrl)
-      icon.setTemplateImage(true)
+      console.warn(`Tray icon not found at: ${iconPath}`)
+      icon = nativeImage.createEmpty()
     }
+
+    // 縮小到 18x18（適合 macOS menu bar）
+    icon = icon.resize({ width: 18, height: 18 })
 
     return icon
   }
@@ -84,9 +79,10 @@ export class TrayManager {
       resizable: false,
       skipTaskbar: true,
       alwaysOnTop: true,
-      transparent: true,
+      transparent: false,
+      backgroundColor: '#ffffff',
       webPreferences: {
-        preload: path.join(__dirname, '..', 'preload.js'),
+        preload: path.join(__dirname, '..', 'preload', 'preload.js'),
         contextIsolation: true,
         nodeIntegration: false,
       },
@@ -102,14 +98,18 @@ export class TrayManager {
     // 載入渲染程序
     if (process.env.NODE_ENV === 'development') {
       window.loadURL('http://localhost:5173')
+      // 開發模式自動開啟 DevTools
+      window.webContents.openDevTools({ mode: 'detach' })
     } else {
       window.loadFile(path.join(__dirname, '..', '..', 'renderer', 'index.html'))
     }
 
-    // 點擊視窗外部時隱藏
-    window.on('blur', () => {
-      this.hideWindow()
-    })
+    // 點擊視窗外部時隱藏（開發模式暫時停用以便 debug）
+    if (process.env.NODE_ENV !== 'development') {
+      window.on('blur', () => {
+        this.hideWindow()
+      })
+    }
 
     return window
   }
@@ -281,6 +281,13 @@ export class TrayManager {
         this.setMenuItemEnabled('stop', true)
         break
     }
+  }
+
+  /**
+   * 取得視窗實例
+   */
+  public getWindow(): BrowserWindow | null {
+    return this.window
   }
 
   /**

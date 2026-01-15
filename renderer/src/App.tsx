@@ -2,8 +2,8 @@ import { Timer } from "@/components/Timer";
 
 const App = () => {
 	return (
-		<div className="min-h-svh p-2">
-			<div className="bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 p-4">
+		<div className="h-full bg-white flex items-center justify-center p-6">
+			<div className="w-full max-w-xs">
 				<Timer />
 			</div>
 		</div>

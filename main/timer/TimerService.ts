@@ -24,10 +24,26 @@ export class TimerService {
   private hasCompleted: boolean = false
 
   /**
-   * 設定事件回呼
+   * 設定事件回呼（合併模式）
    */
   setCallbacks(callbacks: TimerEventCallbacks): void {
-    this.callbacks = callbacks
+    // 合併回呼，支援多個監聽器
+    const prevCallbacks = this.callbacks
+
+    this.callbacks = {
+      onTick: (data) => {
+        prevCallbacks.onTick?.(data)
+        callbacks.onTick?.(data)
+      },
+      onStateChange: (prev, curr) => {
+        prevCallbacks.onStateChange?.(prev, curr)
+        callbacks.onStateChange?.(prev, curr)
+      },
+      onComplete: (duration, elapsed) => {
+        prevCallbacks.onComplete?.(duration, elapsed)
+        callbacks.onComplete?.(duration, elapsed)
+      },
+    }
   }
 
   /**

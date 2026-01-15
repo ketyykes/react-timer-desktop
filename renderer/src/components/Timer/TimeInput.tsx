@@ -40,7 +40,7 @@ export function TimeInput({ onSubmit, disabled }: TimeInputProps) {
   )
 
   return (
-    <div className="flex flex-col gap-1 w-full">
+    <div className="flex flex-col gap-2 w-full">
       <input
         type="text"
         value={value}
@@ -48,11 +48,11 @@ export function TimeInput({ onSubmit, disabled }: TimeInputProps) {
         onKeyDown={handleKeyDown}
         disabled={disabled}
         placeholder="輸入時間 (例: 5:00)"
-        className="w-full px-4 py-2.5 border border-input rounded-lg text-center font-mono text-base bg-background/50 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full px-4 py-2 border border-gray-300 rounded-md text-center font-mono text-base bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
       />
-      <p className="text-xs text-muted-foreground text-center">按 Enter 開始計時</p>
+      <p className="text-xs text-gray-500 text-center">按 Enter 開始計時</p>
       {error && (
-        <span className="text-sm text-destructive text-center">{error}</span>
+        <span className="text-sm text-red-500 text-center">{error}</span>
       )}
     </div>
   )

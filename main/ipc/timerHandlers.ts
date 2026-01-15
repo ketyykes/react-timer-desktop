@@ -34,10 +34,17 @@ export class TimerIpcHandler {
         this.sendToRenderer(IPC_CHANNELS.TIMER_COMPLETE, { duration, actualElapsed }),
     })
 
-    // 註冊 IPC 事件監聽
+    // 註冊 IPC 事件監聯
     ipcMain.handle(IPC_CHANNELS.TIMER_START, (_event, duration: number) => {
       this.timerService.start(duration)
-      return this.timerService.getData()
+      // 返回初始狀態，不使用 getData()（可能已被 tick 更新）
+      return {
+        state: 'running' as const,
+        duration,
+        remaining: duration,
+        elapsed: 0,
+        isOvertime: false,
+      }
     })
 
     ipcMain.handle(IPC_CHANNELS.TIMER_PAUSE, () => {

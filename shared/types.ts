@@ -94,11 +94,14 @@ export const IPC_CHANNELS = {
 
 /**
  * 格式化時間為 MM:SS 格式
+ * 使用 Math.ceil 確保顯示的時間不會比實際剩餘時間少
+ * 例如：298993ms 應顯示 04:59 而非 04:58
  */
 export function formatTime(ms: number): string {
   const isNegative = ms < 0
   const absMs = Math.abs(ms)
-  const totalSeconds = Math.floor(absMs / 1000)
+  // 使用 ceil 確保剩餘時間不會被低估（299001ms 應顯示 05:00）
+  const totalSeconds = Math.ceil(absMs / 1000)
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
 

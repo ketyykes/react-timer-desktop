@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useTimer } from '@/hooks/useTimer'
 import { TimerDisplay } from './TimerDisplay'
 import { TimerControls } from './TimerControls'
@@ -21,27 +21,42 @@ export function Timer() {
     reset,
   } = useTimer()
 
+  // 防止按鈕連點
+  const [isStarting, setIsStarting] = useState(false)
+
   const isIdle = state === 'idle'
   const isActive = state !== 'idle'
 
   const handleTimeSubmit = useCallback(async (ms: number) => {
-    await start(ms)
-  }, [start])
+    if (isStarting) return
+    setIsStarting(true)
+    try {
+      await start(ms)
+    } finally {
+      setIsStarting(false)
+    }
+  }, [start, isStarting])
 
   const handlePresetSelect = useCallback(async (ms: number) => {
-    await start(ms)
-  }, [start])
+    if (isStarting) return
+    setIsStarting(true)
+    try {
+      await start(ms)
+    } finally {
+      setIsStarting(false)
+    }
+  }, [start, isStarting])
 
   // 開始按鈕不需要額外邏輯，由 TimeInput 或 PresetButtons 直接啟動
 
   return (
-    <div className="flex flex-col items-center gap-4 p-2">
+    <div className="flex flex-col items-center justify-center gap-6 text-center">
       <TimerDisplay remaining={remaining} isOvertime={isOvertime} />
 
       {isIdle && (
-        <div className="flex flex-col items-center gap-3 w-full">
-          <TimeInput onSubmit={handleTimeSubmit} disabled={isActive} />
-          <PresetButtons onSelect={handlePresetSelect} disabled={isActive} />
+        <div className="flex flex-col items-center gap-4 w-full">
+          <TimeInput onSubmit={handleTimeSubmit} disabled={isActive || isStarting} />
+          <PresetButtons onSelect={handlePresetSelect} disabled={isActive || isStarting} />
         </div>
       )}
 

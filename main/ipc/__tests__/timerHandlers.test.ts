@@ -77,7 +77,7 @@ describe('TimerIpcHandler', () => {
   })
 
   describe('IPC handler callbacks', () => {
-    it('TIMER_START handler 應呼叫 timerService.start', async () => {
+    it('TIMER_START handler 應呼叫 timerService.start 並返回初始數據', async () => {
       const { TimerIpcHandler } = await import('../timerHandlers')
       const handler = new TimerIpcHandler(mockTimerService as any)
 
@@ -91,11 +91,11 @@ describe('TimerIpcHandler', () => {
       const result = startHandler({}, 60000)
 
       expect(mockTimerServiceStart).toHaveBeenCalledWith(60000)
-      expect(mockTimerServiceGetData).toHaveBeenCalled()
+      // 現在直接返回初始數據，不呼叫 getData()
       expect(result).toEqual({
-        state: 'idle',
-        duration: 0,
-        remaining: 0,
+        state: 'running',
+        duration: 60000,
+        remaining: 60000,
         elapsed: 0,
         isOvertime: false,
       })

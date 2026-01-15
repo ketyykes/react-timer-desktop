@@ -35,6 +35,9 @@ const mockWindowInstance = {
   on: vi.fn(),
   loadURL: vi.fn(),
   loadFile: vi.fn(),
+  webContents: {
+    openDevTools: vi.fn(),
+  },
 }
 
 vi.mock('electron', () => {
@@ -42,9 +45,17 @@ vi.mock('electron', () => {
   const MenuMock = {
     buildFromTemplate: vi.fn((template) => ({ items: template })),
   }
+  const mockNativeImage = {
+    isEmpty: () => false,
+    resize: vi.fn(function(this: typeof mockNativeImage) { return this }),
+  }
+  const mockEmptyImage = {
+    isEmpty: () => true,
+    resize: vi.fn(function(this: typeof mockEmptyImage) { return this }),
+  }
   const nativeImageMock = {
-    createFromPath: vi.fn(() => ({ isEmpty: () => false })),
-    createEmpty: vi.fn(() => ({ isEmpty: () => true })),
+    createFromPath: vi.fn(() => mockNativeImage),
+    createEmpty: vi.fn(() => mockEmptyImage),
   }
   const BrowserWindowMock = vi.fn(() => mockWindowInstance)
   const screenMock = {

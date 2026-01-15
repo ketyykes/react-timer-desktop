@@ -151,7 +151,7 @@ describe('Timer', () => {
 
       expect(screen.getByText('-00:05')).toBeInTheDocument()
       const display = screen.getByTestId('timer-display')
-      expect(display).toHaveClass('text-destructive')
+      expect(display).toHaveClass('text-red-500')
     })
   })
 })

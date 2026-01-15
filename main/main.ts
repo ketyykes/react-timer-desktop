@@ -6,6 +6,7 @@ import { TimerIpcHandler } from './ipc/timerHandlers'
 import { TaskIpcHandler } from './ipc/taskHandlers'
 import { NotificationService } from './notification/NotificationService'
 import { TaskStore } from './store/TaskStore'
+import { formatTime } from '../shared/types'
 
 // 服務實例
 let trayManager: TrayManager | null = null
@@ -19,7 +20,7 @@ let taskStore: TaskStore | null = null
  * 取得 preload script 路徑
  */
 export function getPreloadPath(): string {
-  return path.join(__dirname, '../preload/preload.mjs')
+  return path.join(__dirname, '../preload/preload.js')
 }
 
 /**
@@ -167,14 +168,22 @@ export function initializeServices(): void {
       notificationService?.showTimerComplete(duration)
     },
     onTick: (data) => {
-      // 更新 Tray 標題
-      trayManager?.setTitle(data.remaining > 0 ? timerService!.getFormattedTime() : `-${timerService!.getFormattedTime().slice(1)}`)
+      // 更新 Tray 標題 - 使用 data.remaining 確保與 Renderer 同步
+      trayManager?.updateTitle(formatTime(data.remaining))
     },
   })
 
   // 初始化 IPC 處理器
   timerIpcHandler = new TimerIpcHandler(timerService)
   timerIpcHandler.register()
+
+  // 連接 TrayManager 視窗到 IPC 處理器
+  if (trayManager) {
+    const window = trayManager.getWindow()
+    if (window) {
+      timerIpcHandler.setMainWindow(window)
+    }
+  }
 
   // 初始化任務儲存和 IPC 處理器
   taskStore = new TaskStore()

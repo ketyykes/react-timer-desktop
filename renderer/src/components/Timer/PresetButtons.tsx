@@ -19,15 +19,14 @@ const PRESETS = [
  */
 export function PresetButtons({ onSelect, disabled }: PresetButtonsProps) {
   return (
-    <div className="grid grid-cols-4 gap-2 w-full">
+    <div className="grid grid-cols-2 gap-2 w-full">
       {PRESETS.map((preset) => (
         <Button
           key={preset.ms}
-          variant="secondary"
-          size="sm"
+          variant="outline"
+          size="default"
           disabled={disabled}
           onClick={() => onSelect(preset.ms)}
-          className="text-xs font-medium"
         >
           {preset.label}
         </Button>

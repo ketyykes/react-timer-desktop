@@ -1,9 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+// Mock BrowserWindow for getWindow
+const mockWindow = {
+  webContents: { send: vi.fn() },
+  isDestroyed: () => false,
+}
+
 // Mock TrayManager - 使用可變物件追蹤回呼
 const mockTrayManagerInstance = {
   initialize: vi.fn(),
   destroy: vi.fn(),
+  getWindow: vi.fn(() => mockWindow),
+  showWindow: vi.fn(),
+  updateTitle: vi.fn(),
   onStart: null as (() => void) | null,
   onPause: null as (() => void) | null,
   onStop: null as (() => void) | null,

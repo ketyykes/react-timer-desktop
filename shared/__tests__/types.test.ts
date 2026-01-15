@@ -19,10 +19,11 @@ describe('shared/types.ts', () => {
       expect(formatTime(-61000)).toBe('-01:01')
     })
 
-    it('應正確處理邊界情況', () => {
-      expect(formatTime(500)).toBe('00:00') // 不足 1 秒
-      expect(formatTime(1500)).toBe('00:01') // 1.5 秒取整
-      expect(formatTime(59999)).toBe('00:59') // 接近 1 分鐘
+    it('應正確處理邊界情況（使用 ceil 確保不低估剩餘時間）', () => {
+      expect(formatTime(500)).toBe('00:01') // 0.5 秒 → ceil → 1 秒
+      expect(formatTime(1500)).toBe('00:02') // 1.5 秒 → ceil → 2 秒
+      expect(formatTime(59999)).toBe('01:00') // 59.999 秒 → ceil → 60 秒
+      expect(formatTime(298993)).toBe('04:59') // 298.993 秒 → ceil → 299 秒
     })
   })
 

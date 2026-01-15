@@ -16,8 +16,9 @@ export function TimerDisplay({ remaining, isOvertime }: TimerDisplayProps) {
     <div
       data-testid="timer-display"
       className={cn(
-        'text-6xl font-mono font-bold tabular-nums',
-        isOvertime && 'text-destructive'
+        'text-5xl font-mono font-bold tabular-nums',
+        'text-gray-900',
+        isOvertime && 'text-red-500'
       )}
     >
       {formatTime(remaining)}

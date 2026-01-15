@@ -29,13 +29,13 @@ describe('TimerDisplay', () => {
     it('超時時應套用 overtime 樣式', () => {
       render(<TimerDisplay remaining={-5000} isOvertime={true} />)
       const display = screen.getByTestId('timer-display')
-      expect(display).toHaveClass('text-destructive')
+      expect(display).toHaveClass('text-red-500')
     })
 
     it('非超時時不應套用 overtime 樣式', () => {
       render(<TimerDisplay remaining={5000} isOvertime={false} />)
       const display = screen.getByTestId('timer-display')
-      expect(display).not.toHaveClass('text-destructive')
+      expect(display).not.toHaveClass('text-red-500')
     })
   })
 })

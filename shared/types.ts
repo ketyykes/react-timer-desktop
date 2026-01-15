@@ -20,41 +20,6 @@ export interface TimerData {
 }
 
 /**
- * 計時器 Tick 事件
- */
-export interface TimerTickEvent {
-  type: 'tick'
-  data: TimerData
-}
-
-/**
- * 計時器狀態變更事件
- */
-export interface TimerStateChangeEvent {
-  type: 'stateChange'
-  data: {
-    previousState: TimerState
-    currentState: TimerState
-  }
-}
-
-/**
- * 計時器完成事件（時間到達）
- */
-export interface TimerCompleteEvent {
-  type: 'complete'
-  data: {
-    duration: number
-    actualElapsed: number
-  }
-}
-
-/**
- * 計時器事件聯合型別
- */
-export type TimerEvent = TimerTickEvent | TimerStateChangeEvent | TimerCompleteEvent
-
-/**
  * 任務記錄
  */
 export interface TaskRecord {

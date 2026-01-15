@@ -1,10 +1,6 @@
 import { Tray, Menu, nativeImage, BrowserWindow, app, screen, MenuItemConstructorOptions } from 'electron'
 import path from 'node:path'
-
-/**
- * 計時器狀態
- */
-export type TimerState = 'idle' | 'running' | 'paused' | 'overtime'
+import type { TimerState } from '../../shared/types'
 
 /**
  * 選單項目 ID

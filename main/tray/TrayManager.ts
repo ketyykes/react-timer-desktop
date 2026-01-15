@@ -45,14 +45,28 @@ export class TrayManager {
 
   /**
    * 建立 Tray 圖示
+   * 使用程式碼繪製一個簡單的計時器圖示
    */
   private createTrayIcon(): Electron.NativeImage {
     const iconPath = this.getIconPath()
     let icon = nativeImage.createFromPath(iconPath)
 
-    // 如果圖示載入失敗，建立空圖示（會顯示標題文字）
+    // 如果圖示載入失敗，建立一個計時器模板圖示
     if (icon.isEmpty()) {
-      icon = nativeImage.createEmpty()
+      // 建立 22x22 的模板圖示 (macOS 狀態列標準大小)
+      // 使用 Data URL 建立一個簡單的圓形計時器圖示
+      const size = 22
+      const canvas = `
+        <svg width="${size}" height="${size}" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="11" cy="12" r="8" stroke="black" stroke-width="1.5" fill="none"/>
+          <line x1="11" y1="12" x2="11" y2="7" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="11" y1="12" x2="14" y2="12" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="11" y1="3" x2="11" y2="4" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      `
+      const dataUrl = `data:image/svg+xml;base64,${Buffer.from(canvas).toString('base64')}`
+      icon = nativeImage.createFromDataURL(dataUrl)
+      icon.setTemplateImage(true)
     }
 
     return icon

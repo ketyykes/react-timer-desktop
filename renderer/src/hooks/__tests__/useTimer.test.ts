@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useTimer } from '../useTimer'
-import type { TimerData, TimerState } from '../../../../shared/types'
+import type { TimerData, TimerState, TimerMode } from '../../../../shared/types'
 
 // Mock Electron API
 const mockStart = vi.fn()
@@ -55,10 +55,12 @@ describe('useTimer', () => {
       const { result } = renderHook(() => useTimer())
 
       expect(result.current.state).toBe('idle')
+      expect(result.current.mode).toBe('countdown')
       expect(result.current.duration).toBe(0)
       expect(result.current.remaining).toBe(0)
       expect(result.current.elapsed).toBe(0)
       expect(result.current.isOvertime).toBe(false)
+      expect(result.current.displayTime).toBe(0)
     })
 
     it('應回傳所有控制方法', () => {
@@ -73,13 +75,15 @@ describe('useTimer', () => {
   })
 
   describe('start()', () => {
-    it('應呼叫 API 並更新狀態', async () => {
+    it('應呼叫 API 並更新狀態（預設 countdown 模式）', async () => {
       const mockData: TimerData = {
         state: 'running',
+        mode: 'countdown',
         duration: 60000,
         remaining: 60000,
         elapsed: 0,
         isOvertime: false,
+        displayTime: 60000,
       }
       mockStart.mockResolvedValue(mockData)
 
@@ -89,9 +93,32 @@ describe('useTimer', () => {
         await result.current.start(60000)
       })
 
-      expect(mockStart).toHaveBeenCalledWith(60000)
+      expect(mockStart).toHaveBeenCalledWith(60000, 'countdown')
       expect(result.current.state).toBe('running')
+      expect(result.current.mode).toBe('countdown')
       expect(result.current.duration).toBe(60000)
+    })
+
+    it('應支援 countup 模式', async () => {
+      const mockData: TimerData = {
+        state: 'running',
+        mode: 'countup',
+        duration: 60000,
+        remaining: -60000,
+        elapsed: 0,
+        isOvertime: false,
+        displayTime: 0,
+      }
+      mockStart.mockResolvedValue(mockData)
+
+      const { result } = renderHook(() => useTimer())
+
+      await act(async () => {
+        await result.current.start(60000, 'countup')
+      })
+
+      expect(mockStart).toHaveBeenCalledWith(60000, 'countup')
+      expect(result.current.mode).toBe('countup')
     })
   })
 
@@ -99,10 +126,12 @@ describe('useTimer', () => {
     it('應呼叫 API 並更新狀態', async () => {
       const mockData: TimerData = {
         state: 'paused',
+        mode: 'countdown',
         duration: 60000,
         remaining: 55000,
         elapsed: 5000,
         isOvertime: false,
+        displayTime: 55000,
       }
       mockPause.mockResolvedValue(mockData)
 
@@ -121,10 +150,12 @@ describe('useTimer', () => {
     it('應呼叫 API 並更新狀態', async () => {
       const mockData: TimerData = {
         state: 'running',
+        mode: 'countdown',
         duration: 60000,
         remaining: 55000,
         elapsed: 5000,
         isOvertime: false,
+        displayTime: 55000,
       }
       mockResume.mockResolvedValue(mockData)
 
@@ -143,10 +174,12 @@ describe('useTimer', () => {
     it('應呼叫 API 並更新狀態', async () => {
       const mockData: TimerData = {
         state: 'idle',
+        mode: 'countdown',
         duration: 60000,
         remaining: 60000,
         elapsed: 0,
         isOvertime: false,
+        displayTime: 60000,
       }
       mockStop.mockResolvedValue(mockData)
 
@@ -165,10 +198,12 @@ describe('useTimer', () => {
     it('應呼叫 API 並更新狀態', async () => {
       const mockData: TimerData = {
         state: 'idle',
+        mode: 'countdown',
         duration: 60000,
         remaining: 60000,
         elapsed: 0,
         isOvertime: false,
+        displayTime: 60000,
       }
       mockReset.mockResolvedValue(mockData)
 
@@ -213,10 +248,12 @@ describe('useTimer', () => {
 
       const tickData: TimerData = {
         state: 'running',
+        mode: 'countdown',
         duration: 60000,
         remaining: 55000,
         elapsed: 5000,
         isOvertime: false,
+        displayTime: 55000,
       }
 
       await act(async () => {
@@ -225,6 +262,7 @@ describe('useTimer', () => {
 
       expect(result.current.remaining).toBe(55000)
       expect(result.current.elapsed).toBe(5000)
+      expect(result.current.displayTime).toBe(55000)
     })
 
     it('unmount 時應清除訂閱', () => {
@@ -263,15 +301,15 @@ describe('useTimer', () => {
     })
 
     it('complete 事件 callback 應被觸發', async () => {
-      let completeCallback: ((data: { duration: number; actualElapsed: number }) => void) | null = null
-      mockOnComplete.mockImplementation((callback: (data: { duration: number; actualElapsed: number }) => void) => {
+      let completeCallback: ((data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) | null = null
+      mockOnComplete.mockImplementation((callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => {
         completeCallback = callback
         return vi.fn()
       })
 
       renderHook(() => useTimer())
 
-      const completeData = { duration: 60000, actualElapsed: 60500 }
+      const completeData = { duration: 60000, actualElapsed: 60500, mode: 'countdown' as TimerMode }
 
       // 觸發 callback，不應拋出錯誤
       await act(async () => {
@@ -321,10 +359,12 @@ describe('useTimer', () => {
 
       const overtimeData: TimerData = {
         state: 'overtime',
+        mode: 'countdown',
         duration: 60000,
         remaining: -5000,
         elapsed: 65000,
         isOvertime: true,
+        displayTime: -5000,
       }
 
       await act(async () => {

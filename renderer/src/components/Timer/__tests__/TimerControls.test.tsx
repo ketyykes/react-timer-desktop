@@ -5,33 +5,12 @@ import type { TimerState } from '../../../../../shared/types'
 
 describe('TimerControls', () => {
   const defaultProps = {
-    state: 'idle' as TimerState,
-    onStart: vi.fn(),
+    state: 'running' as TimerState,
     onPause: vi.fn(),
     onResume: vi.fn(),
     onStop: vi.fn(),
     onReset: vi.fn(),
   }
-
-  describe('idle 狀態', () => {
-    it('應顯示開始按鈕', () => {
-      render(<TimerControls {...defaultProps} state="idle" />)
-      expect(screen.getByRole('button', { name: /開始/i })).toBeInTheDocument()
-    })
-
-    it('不應顯示暫停、停止按鈕', () => {
-      render(<TimerControls {...defaultProps} state="idle" />)
-      expect(screen.queryByRole('button', { name: /暫停/i })).not.toBeInTheDocument()
-      expect(screen.queryByRole('button', { name: /停止/i })).not.toBeInTheDocument()
-    })
-
-    it('點擊開始應觸發 onStart', () => {
-      const onStart = vi.fn()
-      render(<TimerControls {...defaultProps} state="idle" onStart={onStart} />)
-      fireEvent.click(screen.getByRole('button', { name: /開始/i }))
-      expect(onStart).toHaveBeenCalledTimes(1)
-    })
-  })
 
   describe('running 狀態', () => {
     it('應顯示暫停和停止按鈕', () => {
@@ -40,9 +19,9 @@ describe('TimerControls', () => {
       expect(screen.getByRole('button', { name: /停止/i })).toBeInTheDocument()
     })
 
-    it('不應顯示開始按鈕', () => {
+    it('不應顯示繼續按鈕', () => {
       render(<TimerControls {...defaultProps} state="running" />)
-      expect(screen.queryByRole('button', { name: /開始/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /繼續/i })).not.toBeInTheDocument()
     })
 
     it('點擊暫停應觸發 onPause', () => {
@@ -67,6 +46,11 @@ describe('TimerControls', () => {
       expect(screen.getByRole('button', { name: /停止/i })).toBeInTheDocument()
     })
 
+    it('不應顯示暫停按鈕', () => {
+      render(<TimerControls {...defaultProps} state="paused" />)
+      expect(screen.queryByRole('button', { name: /暫停/i })).not.toBeInTheDocument()
+    })
+
     it('點擊繼續應觸發 onResume', () => {
       const onResume = vi.fn()
       render(<TimerControls {...defaultProps} state="paused" onResume={onResume} />)
@@ -79,6 +63,12 @@ describe('TimerControls', () => {
     it('應顯示停止按鈕', () => {
       render(<TimerControls {...defaultProps} state="overtime" />)
       expect(screen.getByRole('button', { name: /停止/i })).toBeInTheDocument()
+    })
+
+    it('不應顯示暫停或繼續按鈕', () => {
+      render(<TimerControls {...defaultProps} state="overtime" />)
+      expect(screen.queryByRole('button', { name: /暫停/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /繼續/i })).not.toBeInTheDocument()
     })
 
     it('點擊停止應觸發 onStop', () => {

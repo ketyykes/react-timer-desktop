@@ -22,10 +22,12 @@ const mockTimerServiceReset = vi.fn()
 const mockTimerServiceSetCallbacks = vi.fn()
 const mockTimerServiceGetData = vi.fn(() => ({
   state: 'idle' as const,
+  mode: 'countdown' as const,
   duration: 0,
   remaining: 0,
   elapsed: 0,
   isOvertime: false,
+  displayTime: 0,
 }))
 
 const mockTimerService = {
@@ -77,7 +79,7 @@ describe('TimerIpcHandler', () => {
   })
 
   describe('IPC handler callbacks', () => {
-    it('TIMER_START handler 應呼叫 timerService.start 並返回初始數據', async () => {
+    it('TIMER_START handler 應呼叫 timerService.start 並返回初始數據（預設 countdown 模式）', async () => {
       const { TimerIpcHandler } = await import('../timerHandlers')
       const handler = new TimerIpcHandler(mockTimerService as any)
 
@@ -90,14 +92,40 @@ describe('TimerIpcHandler', () => {
 
       const result = startHandler({}, 60000)
 
-      expect(mockTimerServiceStart).toHaveBeenCalledWith(60000)
+      expect(mockTimerServiceStart).toHaveBeenCalledWith(60000, 'countdown')
       // 現在直接返回初始數據，不呼叫 getData()
       expect(result).toEqual({
         state: 'running',
+        mode: 'countdown',
         duration: 60000,
         remaining: 60000,
         elapsed: 0,
         isOvertime: false,
+        displayTime: 60000,
+      })
+    })
+
+    it('TIMER_START handler 應支援 countup 模式', async () => {
+      const { TimerIpcHandler } = await import('../timerHandlers')
+      const handler = new TimerIpcHandler(mockTimerService as any)
+
+      handler.register()
+
+      const startHandler = mockHandle.mock.calls.find(
+        (call) => call[0] === IPC_CHANNELS.TIMER_START
+      )?.[1]
+
+      const result = startHandler({}, 60000, 'countup')
+
+      expect(mockTimerServiceStart).toHaveBeenCalledWith(60000, 'countup')
+      expect(result).toEqual({
+        state: 'running',
+        mode: 'countup',
+        duration: 60000,
+        remaining: -60000,
+        elapsed: 0,
+        isOvertime: false,
+        displayTime: 0,
       })
     })
 
@@ -191,7 +219,7 @@ describe('TimerIpcHandler', () => {
 
       // 取得 onTick callback
       const callbacks = mockTimerServiceSetCallbacks.mock.calls[0][0]
-      callbacks.onTick({ state: 'running', duration: 60000, remaining: 59000, elapsed: 1000, isOvertime: false })
+      callbacks.onTick({ state: 'running', mode: 'countdown', duration: 60000, remaining: 59000, elapsed: 1000, isOvertime: false, displayTime: 59000 })
 
       expect(mockWindow.webContents.send).toHaveBeenCalledWith(
         IPC_CHANNELS.TIMER_TICK,
@@ -245,7 +273,7 @@ describe('TimerIpcHandler', () => {
       )
     })
 
-    it('onComplete 應發送 TIMER_COMPLETE 事件', async () => {
+    it('onComplete 應發送 TIMER_COMPLETE 事件（包含 mode）', async () => {
       const { TimerIpcHandler } = await import('../timerHandlers')
       const handler = new TimerIpcHandler(mockTimerService as any)
 
@@ -254,11 +282,11 @@ describe('TimerIpcHandler', () => {
       handler.register()
 
       const callbacks = mockTimerServiceSetCallbacks.mock.calls[0][0]
-      callbacks.onComplete(60000, 60500)
+      callbacks.onComplete(60000, 60500, 'countdown')
 
       expect(mockWindow.webContents.send).toHaveBeenCalledWith(
         IPC_CHANNELS.TIMER_COMPLETE,
-        { duration: 60000, actualElapsed: 60500 }
+        { duration: 60000, actualElapsed: 60500, mode: 'countdown' }
       )
     })
   })

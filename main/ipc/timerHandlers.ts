@@ -1,5 +1,5 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import { IPC_CHANNELS } from '../../shared/types'
+import { IPC_CHANNELS, TimerMode } from '../../shared/types'
 import { TimerService } from '../timer/TimerService'
 
 /**
@@ -30,20 +30,22 @@ export class TimerIpcHandler {
       onTick: (data) => this.sendToRenderer(IPC_CHANNELS.TIMER_TICK, data),
       onStateChange: (previousState, currentState) =>
         this.sendToRenderer(IPC_CHANNELS.TIMER_STATE_CHANGE, { previousState, currentState }),
-      onComplete: (duration, actualElapsed) =>
-        this.sendToRenderer(IPC_CHANNELS.TIMER_COMPLETE, { duration, actualElapsed }),
+      onComplete: (duration, actualElapsed, mode) =>
+        this.sendToRenderer(IPC_CHANNELS.TIMER_COMPLETE, { duration, actualElapsed, mode }),
     })
 
     // 註冊 IPC 事件監聯
-    ipcMain.handle(IPC_CHANNELS.TIMER_START, (_event, duration: number) => {
-      this.timerService.start(duration)
+    ipcMain.handle(IPC_CHANNELS.TIMER_START, (_event, duration: number, mode: TimerMode = 'countdown') => {
+      this.timerService.start(duration, mode)
       // 返回初始狀態，不使用 getData()（可能已被 tick 更新）
       return {
         state: 'running' as const,
+        mode,
         duration,
-        remaining: duration,
+        remaining: mode === 'countdown' ? duration : -duration,
         elapsed: 0,
         isOvertime: false,
+        displayTime: mode === 'countdown' ? duration : 0,
       }
     })
 

@@ -1,4 +1,4 @@
-import { TimerState, TimerData, formatTime } from '../../shared/types'
+import { TimerState, TimerMode, TimerData, formatTime } from '../../shared/types'
 
 /**
  * 計時器事件回呼型別
@@ -6,7 +6,7 @@ import { TimerState, TimerData, formatTime } from '../../shared/types'
 export interface TimerEventCallbacks {
   onTick?: (data: TimerData) => void
   onStateChange?: (previousState: TimerState, currentState: TimerState) => void
-  onComplete?: (duration: number, actualElapsed: number) => void
+  onComplete?: (duration: number, actualElapsed: number, mode: TimerMode) => void
 }
 
 /**
@@ -15,6 +15,7 @@ export interface TimerEventCallbacks {
  */
 export class TimerService {
   private state: TimerState = 'idle'
+  private mode: TimerMode = 'countdown'
   private duration: number = 0
   private elapsed: number = 0
   private startTime: number = 0
@@ -39,9 +40,9 @@ export class TimerService {
         prevCallbacks.onStateChange?.(prev, curr)
         callbacks.onStateChange?.(prev, curr)
       },
-      onComplete: (duration, elapsed) => {
-        prevCallbacks.onComplete?.(duration, elapsed)
-        callbacks.onComplete?.(duration, elapsed)
+      onComplete: (duration, elapsed, mode) => {
+        prevCallbacks.onComplete?.(duration, elapsed, mode)
+        callbacks.onComplete?.(duration, elapsed, mode)
       },
     }
   }
@@ -51,33 +52,45 @@ export class TimerService {
    */
   getData(): TimerData {
     const remaining = this.duration - this.elapsed
+    // 根據模式計算顯示時間
+    // countdown: 顯示剩餘時間（可為負數）
+    // countup: 顯示已經過時間（超時後繼續增加）
+    const displayTime = this.mode === 'countdown' ? remaining : this.elapsed
+
     return {
       state: this.state,
+      mode: this.mode,
       duration: this.duration,
       remaining,
       elapsed: this.elapsed,
       isOvertime: remaining < 0,
+      displayTime,
     }
   }
 
   /**
-   * 取得格式化的剩餘時間
+   * 取得格式化的顯示時間
    */
   getFormattedTime(): string {
-    return formatTime(this.duration - this.elapsed)
+    const data = this.getData()
+    // 倒數模式用 ceil（確保剩餘時間不低估），正數模式用 floor（確保經過時間不高估）
+    const useCeil = this.mode === 'countdown'
+    return formatTime(data.displayTime, useCeil)
   }
 
   /**
    * 開始計時
    * @param duration 持續時間（毫秒）
+   * @param mode 計時模式（預設為 countdown）
    */
-  start(duration: number): void {
+  start(duration: number, mode: TimerMode = 'countdown'): void {
     if (duration <= 0) {
       throw new Error('Duration must be a positive number')
     }
 
     const previousState = this.state
     this.duration = duration
+    this.mode = mode
     this.elapsed = 0
     this.pausedElapsed = 0
     this.hasCompleted = false
@@ -238,6 +251,6 @@ export class TimerService {
    * 發送完成事件
    */
   private emitComplete(): void {
-    this.callbacks.onComplete?.(this.duration, this.elapsed)
+    this.callbacks.onComplete?.(this.duration, this.elapsed, this.mode)
   }
 }

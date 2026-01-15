@@ -59,7 +59,7 @@ describe('NotificationService', () => {
       const { NotificationService } = await import('../NotificationService')
       const service = new NotificationService()
 
-      service.showTimerComplete(300000)
+      service.showTimerComplete(300000, 'countdown')
 
       expect(mockNotificationShow).toHaveBeenCalledTimes(1)
     })
@@ -68,29 +68,38 @@ describe('NotificationService', () => {
       const { NotificationService } = await import('../NotificationService')
       const service = new NotificationService()
 
-      const notification = service.showTimerComplete(300000)
+      const notification = service.showTimerComplete(300000, 'countdown')
 
       expect(notification.title).toBe('計時器')
     })
 
-    it('應設定正確的內容（顯示時間）', async () => {
+    it('倒數模式應顯示「時間到」訊息', async () => {
       const { NotificationService } = await import('../NotificationService')
       const service = new NotificationService()
 
-      const notification = service.showTimerComplete(300000)
+      const notification = service.showTimerComplete(300000, 'countdown')
 
       expect(notification.body).toBe('05:00 時間到！')
+    })
+
+    it('正數模式應顯示「已計時」訊息', async () => {
+      const { NotificationService } = await import('../NotificationService')
+      const service = new NotificationService()
+
+      const notification = service.showTimerComplete(300000, 'countup')
+
+      expect(notification.body).toBe('已計時 05:00！')
     })
 
     it('不同時間長度應顯示正確的格式', async () => {
       const { NotificationService } = await import('../NotificationService')
       const service = new NotificationService()
 
-      const notification1 = service.showTimerComplete(60000)
+      const notification1 = service.showTimerComplete(60000, 'countdown')
       expect(notification1.body).toBe('01:00 時間到！')
 
-      const notification2 = service.showTimerComplete(1500000)
-      expect(notification2.body).toBe('25:00 時間到！')
+      const notification2 = service.showTimerComplete(1500000, 'countup')
+      expect(notification2.body).toBe('已計時 25:00！')
     })
   })
 
@@ -99,7 +108,7 @@ describe('NotificationService', () => {
       const { NotificationService } = await import('../NotificationService')
       const service = new NotificationService()
 
-      service.showTimerComplete(300000)
+      service.showTimerComplete(300000, 'countdown')
 
       expect(mockNotificationOn).toHaveBeenCalledWith('click', expect.any(Function))
     })
@@ -109,7 +118,7 @@ describe('NotificationService', () => {
       const onClick = vi.fn()
       const service = new NotificationService({ onClick })
 
-      const notification = service.showTimerComplete(300000)
+      const notification = service.showTimerComplete(300000, 'countdown')
 
       // 模擬點擊
       ;(notification as unknown as MockNotification).simulateClick()
@@ -121,7 +130,7 @@ describe('NotificationService', () => {
       const { NotificationService } = await import('../NotificationService')
       const service = new NotificationService()
 
-      const notification = service.showTimerComplete(300000)
+      const notification = service.showTimerComplete(300000, 'countdown')
 
       expect(() => {
         ;(notification as unknown as MockNotification).simulateClick()

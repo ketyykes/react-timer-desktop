@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { TimerState, TimerData } from '../../../shared/types'
+import type { TimerState, TimerMode, TimerData } from '../../../shared/types'
 
 /**
  * useTimer hook 回傳型別
@@ -7,6 +7,8 @@ import type { TimerState, TimerData } from '../../../shared/types'
 export interface UseTimerReturn {
   /** 計時器狀態 */
   state: TimerState
+  /** 計時模式 */
+  mode: TimerMode
   /** 設定的持續時間（毫秒） */
   duration: number
   /** 剩餘時間（毫秒） */
@@ -15,8 +17,10 @@ export interface UseTimerReturn {
   elapsed: number
   /** 是否超時 */
   isOvertime: boolean
+  /** 顯示用時間（毫秒） */
+  displayTime: number
   /** 開始計時 */
-  start: (duration: number) => Promise<void>
+  start: (duration: number, mode?: TimerMode) => Promise<void>
   /** 暫停計時 */
   pause: () => Promise<void>
   /** 繼續計時 */
@@ -31,14 +35,14 @@ export interface UseTimerReturn {
  * Electron API 型別定義
  */
 interface ElectronTimerAPI {
-  start: (duration: number) => Promise<TimerData>
+  start: (duration: number, mode?: TimerMode) => Promise<TimerData>
   pause: () => Promise<TimerData>
   resume: () => Promise<TimerData>
   stop: () => Promise<TimerData>
   reset: () => Promise<TimerData>
   onTick: (callback: (data: TimerData) => void) => () => void
   onStateChange: (callback: (data: { previousState: TimerState; currentState: TimerState }) => void) => () => void
-  onComplete: (callback: (data: { duration: number; actualElapsed: number }) => void) => () => void
+  onComplete: (callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => () => void
 }
 
 declare global {
@@ -54,10 +58,12 @@ declare global {
  */
 const defaultTimerData: TimerData = {
   state: 'idle',
+  mode: 'countdown',
   duration: 0,
   remaining: 0,
   elapsed: 0,
   isOvertime: false,
+  displayTime: 0,
 }
 
 /**
@@ -73,10 +79,10 @@ export function useTimer(): UseTimerReturn {
   }, [])
 
   // 開始計時
-  const start = useCallback(async (duration: number): Promise<void> => {
+  const start = useCallback(async (duration: number, mode: TimerMode = 'countdown'): Promise<void> => {
     const api = getTimerAPI()
     if (api) {
-      const data = await api.start(duration)
+      const data = await api.start(duration, mode)
       setTimerData(data)
     }
   }, [getTimerAPI])
@@ -146,10 +152,12 @@ export function useTimer(): UseTimerReturn {
 
   return {
     state: timerData.state,
+    mode: timerData.mode,
     duration: timerData.duration,
     remaining: timerData.remaining,
     elapsed: timerData.elapsed,
     isOvertime: timerData.isOvertime,
+    displayTime: timerData.displayTime,
     start,
     pause,
     resume,

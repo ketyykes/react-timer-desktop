@@ -1,5 +1,5 @@
 import { Notification } from 'electron'
-import { formatTime } from '../../shared/types'
+import { formatTime, type TimerMode } from '../../shared/types'
 
 /**
  * 通知服務設定
@@ -30,14 +30,21 @@ export class NotificationService {
   /**
    * 顯示計時器完成通知
    * @param duration 計時器設定的時間長度（毫秒）
+   * @param mode 計時模式
    * @returns Notification 實例
    */
-  showTimerComplete(duration: number): Notification {
+  showTimerComplete(duration: number, mode: TimerMode): Notification {
     const formattedTime = formatTime(duration)
+
+    // 根據模式顯示不同訊息
+    const body =
+      mode === 'countdown'
+        ? `${formattedTime} 時間到！`
+        : `已計時 ${formattedTime}！`
 
     const notification = new Notification({
       title: '計時器',
-      body: `${formattedTime} 時間到！`,
+      body,
     })
 
     notification.on('click', () => {

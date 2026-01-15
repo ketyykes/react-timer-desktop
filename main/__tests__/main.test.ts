@@ -354,8 +354,12 @@ describe('main/main.ts', () => {
       initializeServices()
       const timerService = getTimerService()
 
-      // 觸發 onComplete（透過 start 並等待完成）
-      // 這裡使用 mock 驗證 callbacks 被設定
+      // 取得 setCallbacks 時設定的 onComplete 回呼並執行
+      const callbacks = (timerService as any).callbacks
+      if (callbacks?.onComplete) {
+        callbacks.onComplete(300000, 300500, 'countdown')
+      }
+
       expect(timerService).not.toBeNull()
     })
 
@@ -363,7 +367,23 @@ describe('main/main.ts', () => {
       const { initializeServices, getTimerService } = await import('../main')
 
       initializeServices()
+
       const timerService = getTimerService()
+
+      // 取得 setCallbacks 時設定的 onTick 回呼並執行
+      const callbacks = (timerService as any).callbacks
+      // 執行回呼，確保不會拋出錯誤（trayManager 為 null 時會安全跳過）
+      expect(() => {
+        callbacks?.onTick?.({
+          state: 'running',
+          mode: 'countdown',
+          duration: 300000,
+          remaining: 295000,
+          elapsed: 5000,
+          isOvertime: false,
+          displayTime: 295000,
+        })
+      }).not.toThrow()
 
       expect(timerService).not.toBeNull()
     })

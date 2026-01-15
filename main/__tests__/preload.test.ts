@@ -47,20 +47,31 @@ describe('main/preload.ts', () => {
   describe('timer API', () => {
     const mockTimerData: TimerData = {
       state: 'running',
+      mode: 'countdown',
       duration: 60000,
       remaining: 59000,
       elapsed: 1000,
       isOvertime: false,
+      displayTime: 59000,
     }
 
-    it('timer.start 應呼叫 ipcRenderer.invoke', async () => {
+    it('timer.start 應呼叫 ipcRenderer.invoke（預設 countdown 模式）', async () => {
       mockInvoke.mockResolvedValue(mockTimerData)
       const { electronAPI } = await import('../preload')
 
       const result = await electronAPI.timer.start(60000)
 
-      expect(mockInvoke).toHaveBeenCalledWith(IPC_CHANNELS.TIMER_START, 60000)
+      expect(mockInvoke).toHaveBeenCalledWith(IPC_CHANNELS.TIMER_START, 60000, 'countdown')
       expect(result).toEqual(mockTimerData)
+    })
+
+    it('timer.start 應支援指定 countup 模式', async () => {
+      mockInvoke.mockResolvedValue({ ...mockTimerData, mode: 'countup' })
+      const { electronAPI } = await import('../preload')
+
+      await electronAPI.timer.start(60000, 'countup')
+
+      expect(mockInvoke).toHaveBeenCalledWith(IPC_CHANNELS.TIMER_START, 60000, 'countup')
     })
 
     it('timer.pause 應呼叫 ipcRenderer.invoke', async () => {
@@ -191,7 +202,7 @@ describe('main/preload.ts', () => {
       const callback = vi.fn()
       electronAPI.timer.onComplete(callback)
 
-      const completeData = { duration: 60000, actualElapsed: 60500 }
+      const completeData = { duration: 60000, actualElapsed: 60500, mode: 'countdown' }
       if (capturedHandler !== null) {
         (capturedHandler as (_event: unknown, data: unknown) => void)({}, completeData)
       }

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
-import { IPC_CHANNELS, TimerData, TimerState, TaskRecord } from '../shared/types'
+import { IPC_CHANNELS, TimerData, TimerState, TimerMode, TaskRecord } from '../shared/types'
 
 /**
  * 計時器狀態變更事件資料
@@ -15,6 +15,7 @@ export interface TimerStateChangeData {
 export interface TimerCompleteData {
   duration: number
   actualElapsed: number
+  mode: TimerMode
 }
 
 /**
@@ -23,8 +24,8 @@ export interface TimerCompleteData {
 export const electronAPI = {
   // 計時器相關 IPC
   timer: {
-    start: (duration: number): Promise<TimerData> =>
-      ipcRenderer.invoke(IPC_CHANNELS.TIMER_START, duration),
+    start: (duration: number, mode: TimerMode = 'countdown'): Promise<TimerData> =>
+      ipcRenderer.invoke(IPC_CHANNELS.TIMER_START, duration, mode),
     pause: (): Promise<TimerData> => ipcRenderer.invoke(IPC_CHANNELS.TIMER_PAUSE),
     resume: (): Promise<TimerData> => ipcRenderer.invoke(IPC_CHANNELS.TIMER_RESUME),
     stop: (): Promise<TimerData> => ipcRenderer.invoke(IPC_CHANNELS.TIMER_STOP),

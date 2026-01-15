@@ -62,10 +62,12 @@ describe('Timer', () => {
     it('輸入時間並按開始應呼叫 start', async () => {
       const mockData: TimerData = {
         state: 'running',
+        mode: 'countdown',
         duration: 300000,
         remaining: 300000,
         elapsed: 0,
         isOvertime: false,
+        displayTime: 300000,
       }
       mockStart.mockResolvedValue(mockData)
 
@@ -79,16 +81,18 @@ describe('Timer', () => {
         await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
-      expect(mockStart).toHaveBeenCalledWith(300000)
+      expect(mockStart).toHaveBeenCalledWith(300000, 'countdown')
     })
 
     it('點擊預設時間按鈕應呼叫 start', async () => {
       const mockData: TimerData = {
         state: 'running',
+        mode: 'countdown',
         duration: 300000,
         remaining: 300000,
         elapsed: 0,
         isOvertime: false,
+        displayTime: 300000,
       }
       mockStart.mockResolvedValue(mockData)
 
@@ -100,7 +104,7 @@ describe('Timer', () => {
         await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
-      expect(mockStart).toHaveBeenCalledWith(300000)
+      expect(mockStart).toHaveBeenCalledWith(300000, 'countdown')
     })
 
     it('running 狀態 UI 應正確更新', async () => {
@@ -114,10 +118,12 @@ describe('Timer', () => {
 
       const runningData: TimerData = {
         state: 'running',
+        mode: 'countdown',
         duration: 300000,
         remaining: 295000,
         elapsed: 5000,
         isOvertime: false,
+        displayTime: 295000,
       }
 
       await act(async () => {
@@ -139,10 +145,12 @@ describe('Timer', () => {
 
       const overtimeData: TimerData = {
         state: 'overtime',
+        mode: 'countdown',
         duration: 60000,
         remaining: -5000,
         elapsed: 65000,
         isOvertime: true,
+        displayTime: -5000,
       }
 
       await act(async () => {

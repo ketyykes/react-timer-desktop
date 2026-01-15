@@ -4,8 +4,6 @@ import type { TimerState } from '../../../../shared/types'
 export interface TimerControlsProps {
   /** 目前計時器狀態 */
   state: TimerState
-  /** 開始計時 */
-  onStart: () => void
   /** 暫停計時 */
   onPause: () => void
   /** 繼續計時 */
@@ -18,20 +16,16 @@ export interface TimerControlsProps {
 
 /**
  * 計時器控制按鈕元件
+ * 只在計時中 (running/paused/overtime) 顯示控制按鈕
  */
 export function TimerControls({
   state,
-  onStart,
   onPause,
   onResume,
   onStop,
 }: TimerControlsProps) {
   return (
     <div className="flex gap-3 justify-center">
-      {state === 'idle' && (
-        <Button onClick={onStart}>開始</Button>
-      )}
-
       {state === 'running' && (
         <>
           <Button variant="outline" onClick={onPause}>暫停</Button>

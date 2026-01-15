@@ -164,12 +164,14 @@ export function initializeServices(): void {
 
   // 設定計時器完成時的通知
   timerService.setCallbacks({
-    onComplete: (duration) => {
-      notificationService?.showTimerComplete(duration)
+    onComplete: (duration, _actualElapsed, mode) => {
+      notificationService?.showTimerComplete(duration, mode)
     },
     onTick: (data) => {
-      // 更新 Tray 標題 - 使用 data.remaining 確保與 Renderer 同步
-      trayManager?.updateTitle(formatTime(data.remaining))
+      // 更新 Tray 標題 - 根據模式選擇正確的格式化方式
+      // countdown 用 ceil（確保剩餘時間不低估），countup 用 floor（確保經過時間不高估）
+      const useCeil = data.mode === 'countdown'
+      trayManager?.updateTitle(formatTime(data.displayTime, useCeil))
     },
   })
 

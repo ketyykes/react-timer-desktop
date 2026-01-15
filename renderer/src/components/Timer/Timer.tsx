@@ -1,10 +1,12 @@
 import { useCallback, useState } from 'react'
 import { useTimer } from '@/hooks/useTimer'
-import { parseTime } from '../../../../shared/types'
+import { parseTime, type TimerMode } from '../../../../shared/types'
 import { TimerDisplay } from './TimerDisplay'
 import { TimerControls } from './TimerControls'
 import { TimeInput } from './TimeInput'
 import { PresetButtons } from './PresetButtons'
+import { ModeSelector } from './ModeSelector'
+import { Button } from '@/components/ui/button'
 
 /**
  * 計時器主元件
@@ -13,7 +15,8 @@ import { PresetButtons } from './PresetButtons'
 export function Timer() {
   const {
     state,
-    remaining,
+    mode,
+    displayTime,
     isOvertime,
     start,
     pause,
@@ -27,6 +30,8 @@ export function Timer() {
   const [inputError, setInputError] = useState<string | null>(null)
   // 防止按鈕連點
   const [isStarting, setIsStarting] = useState(false)
+  // 選擇的計時模式
+  const [selectedMode, setSelectedMode] = useState<TimerMode>('countdown')
 
   const isIdle = state === 'idle'
   const isActive = state !== 'idle'
@@ -36,13 +41,13 @@ export function Timer() {
     if (isStarting) return
     setIsStarting(true)
     try {
-      await start(ms)
+      await start(ms, selectedMode)
       setInputValue('')
       setInputError(null)
     } finally {
       setIsStarting(false)
     }
-  }, [start, isStarting])
+  }, [start, isStarting, selectedMode])
 
   // 處理時間輸入變更
   const handleInputChange = useCallback((value: string) => {
@@ -76,9 +81,12 @@ export function Timer() {
     }
   }, [inputValue, startTimer])
 
+  // 顯示的模式：計時中用實際模式，idle 時用選擇的模式
+  const displayMode = isIdle ? selectedMode : mode
+
   return (
     <div className="flex flex-col items-center justify-center gap-6 text-center">
-      <TimerDisplay remaining={remaining} isOvertime={isOvertime} />
+      <TimerDisplay displayTime={displayTime} isOvertime={isOvertime} mode={displayMode} />
 
       {isIdle && (
         <div className="flex flex-col items-center gap-4 w-full">
@@ -90,17 +98,28 @@ export function Timer() {
             error={inputError}
           />
           <PresetButtons onSelect={handlePresetSelect} disabled={isActive || isStarting} />
+          <div className="flex gap-2 items-center">
+            <ModeSelector
+              mode={selectedMode}
+              onChange={setSelectedMode}
+              disabled={isActive || isStarting}
+            />
+            <Button onClick={handleStart} disabled={isStarting}>
+              開始
+            </Button>
+          </div>
         </div>
       )}
 
-      <TimerControls
-        state={state}
-        onStart={handleStart}
-        onPause={pause}
-        onResume={resume}
-        onStop={stop}
-        onReset={reset}
-      />
+      {!isIdle && (
+        <TimerControls
+          state={state}
+          onPause={pause}
+          onResume={resume}
+          onStop={stop}
+          onReset={reset}
+        />
+      )}
     </div>
   )
 }

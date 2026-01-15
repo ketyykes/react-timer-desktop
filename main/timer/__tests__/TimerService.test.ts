@@ -25,10 +25,12 @@ describe('TimerService', () => {
     it('應初始化為 idle 狀態', () => {
       const data = timerService.getData()
       expect(data.state).toBe('idle')
+      expect(data.mode).toBe('countdown')
       expect(data.duration).toBe(0)
       expect(data.remaining).toBe(0)
       expect(data.elapsed).toBe(0)
       expect(data.isOvertime).toBe(false)
+      expect(data.displayTime).toBe(0)
     })
 
     it('getFormattedTime 應回傳 00:00', () => {
@@ -227,7 +229,7 @@ describe('TimerService', () => {
       vi.advanceTimersByTime(2000)
 
       expect(mockCallbacks.onComplete).toHaveBeenCalledTimes(1)
-      expect(mockCallbacks.onComplete).toHaveBeenCalledWith(1000, expect.any(Number))
+      expect(mockCallbacks.onComplete).toHaveBeenCalledWith(1000, expect.any(Number), 'countdown')
 
       // 再過幾秒不應再次觸發
       vi.advanceTimersByTime(5000)
@@ -336,6 +338,93 @@ describe('TimerService', () => {
       expect(timerService.getData().state).toBe('running')
       expect(timerService.getData().duration).toBe(30000)
       expect(timerService.getData().elapsed).toBe(0)
+    })
+  })
+
+  describe('timer mode - countdown', () => {
+    it('預設應為 countdown 模式', () => {
+      timerService.start(60000)
+      expect(timerService.getData().mode).toBe('countdown')
+    })
+
+    it('倒數模式下 displayTime 應等於 remaining', () => {
+      timerService.start(60000)
+      vi.advanceTimersByTime(10000)
+
+      const data = timerService.getData()
+      expect(data.displayTime).toBe(data.remaining)
+    })
+
+    it('倒數模式超時後 displayTime 應為負數', () => {
+      timerService.start(1000)
+      vi.advanceTimersByTime(3000)
+
+      const data = timerService.getData()
+      expect(data.displayTime).toBeLessThan(0)
+      expect(data.isOvertime).toBe(true)
+    })
+  })
+
+  describe('timer mode - countup', () => {
+    it('正數模式下 displayTime 應等於 elapsed', () => {
+      timerService.start(60000, 'countup')
+      vi.advanceTimersByTime(10000)
+
+      const data = timerService.getData()
+      expect(data.mode).toBe('countup')
+      expect(data.displayTime).toBe(data.elapsed)
+    })
+
+    it('正數模式超時時應觸發 onComplete（只一次）', () => {
+      timerService.start(1000, 'countup')
+      vi.advanceTimersByTime(2000)
+
+      expect(mockCallbacks.onComplete).toHaveBeenCalledTimes(1)
+      expect(mockCallbacks.onComplete).toHaveBeenCalledWith(1000, expect.any(Number), 'countup')
+    })
+
+    it('正數模式超時後 displayTime 應繼續增加', () => {
+      timerService.start(1000, 'countup')
+      vi.advanceTimersByTime(3000)
+
+      const data = timerService.getData()
+      expect(data.displayTime).toBeGreaterThan(1000)
+      expect(data.isOvertime).toBe(true)
+    })
+
+    it('正數模式超時後 elapsed 應大於 duration', () => {
+      timerService.start(1000, 'countup')
+      vi.advanceTimersByTime(3000)
+
+      const data = timerService.getData()
+      expect(data.elapsed).toBeGreaterThan(data.duration)
+    })
+  })
+
+  describe('timer mode - switching', () => {
+    it('start 時應能指定模式', () => {
+      timerService.start(60000, 'countup')
+      expect(timerService.getData().mode).toBe('countup')
+
+      timerService.start(30000, 'countdown')
+      expect(timerService.getData().mode).toBe('countdown')
+    })
+
+    it('stop 後再 start 應能切換模式', () => {
+      timerService.start(60000, 'countdown')
+      timerService.stop()
+
+      timerService.start(60000, 'countup')
+      expect(timerService.getData().mode).toBe('countup')
+    })
+
+    it('getFormattedTime 在 countup 模式應顯示 elapsed 時間', () => {
+      timerService.start(60000, 'countup')
+      vi.advanceTimersByTime(5000)
+
+      // countup 模式顯示 elapsed (約 5 秒)
+      const formatted = timerService.getFormattedTime()
+      expect(formatted).toMatch(/^00:0[5-6]$/)
     })
   })
 })

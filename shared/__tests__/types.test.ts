@@ -25,6 +25,12 @@ describe('shared/types.ts', () => {
       expect(formatTime(59999)).toBe('01:00') // 59.999 秒 → ceil → 60 秒
       expect(formatTime(298993)).toBe('04:59') // 298.993 秒 → ceil → 299 秒
     })
+
+    it('應正確處理 undefined 和 NaN（防禦性處理）', () => {
+      expect(formatTime(undefined as unknown as number)).toBe('00:00')
+      expect(formatTime(null as unknown as number)).toBe('00:00')
+      expect(formatTime(NaN)).toBe('00:00')
+    })
   })
 
   describe('parseTime', () => {

@@ -35,14 +35,14 @@ export function Timer() {
   // 開始按鈕不需要額外邏輯，由 TimeInput 或 PresetButtons 直接啟動
 
   return (
-    <div className="flex flex-col items-center gap-6 p-6">
+    <div className="flex flex-col items-center gap-4 p-2">
       <TimerDisplay remaining={remaining} isOvertime={isOvertime} />
 
       {isIdle && (
-        <>
+        <div className="flex flex-col items-center gap-3 w-full">
           <TimeInput onSubmit={handleTimeSubmit} disabled={isActive} />
           <PresetButtons onSelect={handlePresetSelect} disabled={isActive} />
-        </>
+        </div>
       )}
 
       <TimerControls

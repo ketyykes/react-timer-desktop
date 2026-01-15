@@ -126,8 +126,8 @@ describe('main/preload.ts', () => {
       const callback = vi.fn()
       electronAPI.timer.onTick(callback)
 
-      if (capturedHandler) {
-        capturedHandler({}, mockTimerData)
+      if (capturedHandler !== null) {
+        (capturedHandler as (_event: unknown, data: unknown) => void)({}, mockTimerData)
       }
       expect(callback).toHaveBeenCalledWith(mockTimerData)
     })
@@ -159,8 +159,8 @@ describe('main/preload.ts', () => {
       electronAPI.timer.onStateChange(callback)
 
       const stateChangeData = { previousState: 'idle', currentState: 'running' }
-      if (capturedHandler) {
-        capturedHandler({}, stateChangeData)
+      if (capturedHandler !== null) {
+        (capturedHandler as (_event: unknown, data: unknown) => void)({}, stateChangeData)
       }
       expect(callback).toHaveBeenCalledWith(stateChangeData)
     })
@@ -192,8 +192,8 @@ describe('main/preload.ts', () => {
       electronAPI.timer.onComplete(callback)
 
       const completeData = { duration: 60000, actualElapsed: 60500 }
-      if (capturedHandler) {
-        capturedHandler({}, completeData)
+      if (capturedHandler !== null) {
+        (capturedHandler as (_event: unknown, data: unknown) => void)({}, completeData)
       }
       expect(callback).toHaveBeenCalledWith(completeData)
     })

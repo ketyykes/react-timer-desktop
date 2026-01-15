@@ -429,8 +429,8 @@ describe('TrayManager', () => {
 
       // 取得並執行 blur 回呼
       const blurCall = mockWindowInstance.on.mock.calls.find(
-        (call: [string, () => void]) => call[0] === 'blur'
-      )
+        (call) => call[0] === 'blur'
+      ) as [string, () => void] | undefined
       const blurCallback = blurCall?.[1]
 
       blurCallback?.()
@@ -447,8 +447,8 @@ describe('TrayManager', () => {
 
       // 取得並執行 click 回呼
       const clickCall = mockOn.mock.calls.find(
-        (call: [string, () => void]) => call[0] === 'click'
-      )
+        (call) => call[0] === 'click'
+      ) as [string, () => void] | undefined
       const clickCallback = clickCall?.[1]
 
       // 執行 click 回呼應該切換視窗

@@ -49,11 +49,13 @@ vi.mock('electron', () => {
     close: vi.fn(),
   }))
 
-  const NotificationMock = vi.fn().mockImplementation(() => ({
-    show: vi.fn(),
-    on: vi.fn().mockReturnThis(),
-  }))
-  NotificationMock.isSupported = vi.fn(() => true)
+  const NotificationMock = Object.assign(
+    vi.fn().mockImplementation(() => ({
+      show: vi.fn(),
+      on: vi.fn().mockReturnThis(),
+    })),
+    { isSupported: vi.fn(() => true) }
+  )
 
   return {
     app: {
@@ -304,8 +306,8 @@ describe('main/main.ts', () => {
 
       // 取得 before-quit 回呼
       const beforeQuitCall = mockOn.mock.calls.find(
-        (call: [string, () => void]) => call[0] === 'before-quit'
-      )
+        (call) => call[0] === 'before-quit'
+      ) as [string, () => void] | undefined
       const beforeQuitCallback = beforeQuitCall?.[1]
 
       // 確保回呼存在且能正常執行不拋出錯誤

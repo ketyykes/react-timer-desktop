@@ -38,7 +38,7 @@ Mac 狀態列計時器應用，可設定倒數時間，時間到時提醒但繼�
 - 開始/暫停/停止按鈕
 - 超時狀態視覺提示（變色）
 
-### P5: 通知提醒 `[IN_PROGRESS]`
+### P5: 通知提醒 `[COMPLETED]`
 - Electron Notification API 系統通知
 - 時間到達時觸發通知
 
@@ -91,6 +91,14 @@ Mac 狀態列計時器應用，可設定倒數時間，時間到時提醒但繼�
 - ✅ 建立 PresetButtons 預設時間元件
 - ✅ 超時狀態視覺提示（紅色樣式）
 - ✅ 測試覆蓋率：main ≥95%, renderer 100%
+
+### P5: 通知提醒 (2026-01-15)
+- ✅ 實作 NotificationService 類別
+- ✅ showTimerComplete() 顯示系統通知
+- ✅ onClick 回呼支援
+- ✅ isSupported() 靜態方法
+- ✅ 與 TimerService onComplete 整合
+- ✅ 測試覆蓋率 ≥95%
 
 ## 失敗記錄
 

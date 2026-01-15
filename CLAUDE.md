@@ -4,69 +4,101 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-React Timer Desktop - A desktop timer application built with React 19, TypeScript, Vite 7, and Tailwind CSS 4. Uses shadcn/ui components with the "new-york" style.
+React Timer Desktop - A macOS menu bar timer application built with Electron 33, React 19, TypeScript, and Tailwind CSS 4. The app runs as a system tray application with a popover window for the timer UI.
 
 ## Development Commands
 
-All commands must be run from the `renderer/` directory:
-
 ```bash
+# Root directory commands (Electron + full app)
+pnpm install          # Install all dependencies
+pnpm dev              # Start Electron app with hot reload (runs electron-vite dev)
+pnpm build            # Build for production
+pnpm test             # Run main process + shared tests
+pnpm test:watch       # Watch mode for main process tests
+pnpm lint             # ESLint for all TypeScript files
+
+# Renderer-specific commands (run from renderer/ directory)
 cd renderer
-
-# Install dependencies
-pnpm install
-
-# Start development server with HMR
-pnpm dev
-
-# Type check and build for production
-pnpm build
-
-# Run ESLint
-pnpm lint
-
-# Preview production build
-pnpm preview
+pnpm install          # Install renderer dependencies
+pnpm dev              # Start Vite dev server only (renderer)
+pnpm test             # Run React component tests
+pnpm test:watch       # Watch mode for renderer tests
+pnpm dlx shadcn@latest add <component>  # Add shadcn/ui component
 ```
 
-## Project Architecture
+## Architecture
+
+### Process Model (Electron)
 
 ```
-renderer/                  # Main application directory
-├── src/
-│   ├── main.tsx          # Application entry point (React StrictMode)
-│   ├── App.tsx           # Root component
-│   ├── index.css         # Global styles, Tailwind config, CSS variables (light/dark themes)
-│   ├── components/
-│   │   └── ui/           # shadcn/ui components
-│   └── lib/
-│       └── utils.ts      # Utility functions (cn helper for className merging)
-├── components.json        # shadcn/ui configuration
-└── vite.config.ts        # Vite configuration with path aliases
+┌─────────────────────────────────────────────────────────────┐
+│ Main Process (main/)                                        │
+│  ├── main.ts           Entry point, app lifecycle           │
+│  ├── preload.ts        contextBridge API exposure           │
+│  ├── tray/             TrayManager - system tray + popover  │
+│  ├── timer/            TimerService - timer state machine   │
+│  ├── ipc/              IPC handlers (timer, task)           │
+│  ├── notification/     macOS notifications                  │
+│  └── store/            TaskStore - electron-store persist   │
+├─────────────────────────────────────────────────────────────┤
+│ Shared (shared/)                                            │
+│  └── types.ts          IPC_CHANNELS, TimerState, TaskRecord │
+├─────────────────────────────────────────────────────────────┤
+│ Renderer Process (renderer/src/)                            │
+│  ├── App.tsx           Root component                       │
+│  ├── hooks/useTimer.ts IPC bridge to TimerService           │
+│  └── components/Timer/ Timer UI components                  │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+### IPC Communication Pattern
+
+**Renderer → Main** (invoke/handle):
+- `timer:start`, `timer:pause`, `timer:resume`, `timer:stop`, `timer:reset`
+- `task:save`, `task:getAll`, `task:delete`
+
+**Main → Renderer** (send/on):
+- `timer:tick` - Every second with TimerData
+- `timer:stateChange` - State transitions
+- `timer:complete` - Timer finished
+
+### Timer State Machine
+
+```
+idle → running → overtime
+  ↑       ↓         ↓
+  └── paused ←──────┘
+```
+
+States: `'idle' | 'running' | 'paused' | 'overtime'`
 
 ## Key Conventions
 
-### Import Path Alias
-Use `@/` alias for imports from `src/`:
+### Import Paths
 ```typescript
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-```
+// Renderer: use @/ alias
+import { useTimer } from '@/hooks/useTimer'
+import { Button } from '@/components/ui/button'
 
-### Adding shadcn/ui Components
-```bash
-cd renderer
-pnpm dlx shadcn@latest add <component-name>
+// Main/Shared: use relative paths
+import { IPC_CHANNELS } from '../../shared/types'
 ```
 
 ### Styling
-- Tailwind CSS 4 with CSS variables for theming
-- Dark mode: Add `.dark` class to enable dark theme
-- Color tokens defined in `src/index.css` using OKLCH color space
-- Use `cn()` utility for conditional class merging
+- Tailwind CSS 4 with OKLCH color tokens in `renderer/src/index.css`
+- shadcn/ui "new-york" style with Radix UI primitives
+- Dark mode via `.dark` class on document
 
-### TypeScript
-- Strict mode enabled
-- Target: ES2022
-- Path aliases configured in both `tsconfig.json` and `vite.config.ts`
+### Testing
+- **Main process**: Vitest in Node environment, tests in `__tests__/` folders
+- **Renderer**: Vitest + jsdom + @testing-library/react
+- Coverage threshold: 95% for statements, branches, functions, lines
+
+## Build Output
+
+```
+dist/
+├── main/      # Compiled main process
+├── preload/   # Compiled preload script
+└── renderer/  # Bundled React app
+```

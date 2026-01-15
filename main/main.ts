@@ -19,7 +19,7 @@ let taskStore: TaskStore | null = null
  * 取得 preload script 路徑
  */
 export function getPreloadPath(): string {
-  return path.join(__dirname, 'preload.js')
+  return path.join(__dirname, '../preload/preload.mjs')
 }
 
 /**

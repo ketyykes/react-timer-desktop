@@ -1,9 +1,15 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 import { TrayManager } from './tray/TrayManager'
+import { TimerService } from './timer/TimerService'
+import { TimerIpcHandler } from './ipc/timerHandlers'
+import { NotificationService } from './notification/NotificationService'
 
-// TrayManager 實例
+// 服務實例
 let trayManager: TrayManager | null = null
+let timerService: TimerService | null = null
+let timerIpcHandler: TimerIpcHandler | null = null
+let notificationService: NotificationService | null = null
 
 /**
  * 取得 preload script 路徑
@@ -116,12 +122,60 @@ export function getTrayManager(): TrayManager | null {
 }
 
 /**
+ * 取得 TimerService 實例
+ */
+export function getTimerService(): TimerService | null {
+  return timerService
+}
+
+/**
+ * 取得 NotificationService 實例
+ */
+export function getNotificationService(): NotificationService | null {
+  return notificationService
+}
+
+/**
+ * 初始化計時器和通知服務
+ */
+export function initializeServices(): void {
+  // 初始化計時器服務
+  timerService = new TimerService()
+
+  // 初始化通知服務
+  notificationService = new NotificationService({
+    onClick: () => {
+      // 通知點擊時顯示視窗
+      trayManager?.showWindow()
+    },
+  })
+
+  // 設定計時器完成時的通知
+  timerService.setCallbacks({
+    onComplete: (duration) => {
+      notificationService?.showTimerComplete(duration)
+    },
+    onTick: (data) => {
+      // 更新 Tray 標題
+      trayManager?.setTitle(data.remaining > 0 ? timerService!.getFormattedTime() : `-${timerService!.getFormattedTime().slice(1)}`)
+    },
+  })
+
+  // 初始化 IPC 處理器
+  timerIpcHandler = new TimerIpcHandler(timerService)
+  timerIpcHandler.register()
+}
+
+/**
  * 初始化應用程式
  */
 export function initializeApp(): void {
   app.whenReady().then(() => {
-    // 初始化 Tray（替代原本的視窗建立）
+    // 初始化 Tray
     trayManager = initializeTray()
+
+    // 初始化計時器和通知服務
+    initializeServices()
 
     app.on('activate', handleActivate)
   })
@@ -130,8 +184,13 @@ export function initializeApp(): void {
 
   // 應用退出前清理
   app.on('before-quit', () => {
+    timerIpcHandler?.unregister()
+    timerService?.destroy()
     trayManager?.destroy()
     trayManager = null
+    timerService = null
+    timerIpcHandler = null
+    notificationService = null
   })
 }
 

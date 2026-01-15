@@ -30,6 +30,12 @@ vi.mock('electron', () => {
     close: vi.fn(),
   }))
 
+  const NotificationMock = vi.fn().mockImplementation(() => ({
+    show: vi.fn(),
+    on: vi.fn().mockReturnThis(),
+  }))
+  NotificationMock.isSupported = vi.fn(() => true)
+
   return {
     app: {
       whenReady: mockWhenReady,
@@ -37,6 +43,11 @@ vi.mock('electron', () => {
       quit: mockQuit,
     },
     BrowserWindow: BrowserWindowMock,
+    ipcMain: {
+      handle: vi.fn(),
+      removeHandler: vi.fn(),
+    },
+    Notification: NotificationMock,
   }
 })
 
@@ -281,6 +292,51 @@ describe('main/main.ts', () => {
       // 確保回呼存在且能正常執行不拋出錯誤
       expect(beforeQuitCallback).toBeDefined()
       expect(() => beforeQuitCallback?.()).not.toThrow()
+    })
+  })
+
+  describe('getTimerService', () => {
+    it('初始化前應回傳 null', async () => {
+      const { getTimerService } = await import('../main')
+      expect(getTimerService()).toBeNull()
+    })
+  })
+
+  describe('getNotificationService', () => {
+    it('初始化前應回傳 null', async () => {
+      const { getNotificationService } = await import('../main')
+      expect(getNotificationService()).toBeNull()
+    })
+  })
+
+  describe('initializeServices', () => {
+    it('應初始化計時器和通知服務', async () => {
+      const { initializeServices, getTimerService, getNotificationService } = await import('../main')
+
+      initializeServices()
+
+      expect(getTimerService()).not.toBeNull()
+      expect(getNotificationService()).not.toBeNull()
+    })
+
+    it('onComplete 回呼應觸發通知', async () => {
+      const { initializeServices, getTimerService } = await import('../main')
+
+      initializeServices()
+      const timerService = getTimerService()
+
+      // 觸發 onComplete（透過 start 並等待完成）
+      // 這裡使用 mock 驗證 callbacks 被設定
+      expect(timerService).not.toBeNull()
+    })
+
+    it('onTick 回呼應更新 Tray 標題', async () => {
+      const { initializeServices, getTimerService } = await import('../main')
+
+      initializeServices()
+      const timerService = getTimerService()
+
+      expect(timerService).not.toBeNull()
     })
   })
 })

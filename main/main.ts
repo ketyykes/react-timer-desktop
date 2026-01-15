@@ -3,13 +3,17 @@ import path from 'node:path'
 import { TrayManager } from './tray/TrayManager'
 import { TimerService } from './timer/TimerService'
 import { TimerIpcHandler } from './ipc/timerHandlers'
+import { TaskIpcHandler } from './ipc/taskHandlers'
 import { NotificationService } from './notification/NotificationService'
+import { TaskStore } from './store/TaskStore'
 
 // 服務實例
 let trayManager: TrayManager | null = null
 let timerService: TimerService | null = null
 let timerIpcHandler: TimerIpcHandler | null = null
+let taskIpcHandler: TaskIpcHandler | null = null
 let notificationService: NotificationService | null = null
+let taskStore: TaskStore | null = null
 
 /**
  * 取得 preload script 路徑
@@ -136,6 +140,13 @@ export function getNotificationService(): NotificationService | null {
 }
 
 /**
+ * 取得 TaskStore 實例
+ */
+export function getTaskStore(): TaskStore | null {
+  return taskStore
+}
+
+/**
  * 初始化計時器和通知服務
  */
 export function initializeServices(): void {
@@ -164,6 +175,11 @@ export function initializeServices(): void {
   // 初始化 IPC 處理器
   timerIpcHandler = new TimerIpcHandler(timerService)
   timerIpcHandler.register()
+
+  // 初始化任務儲存和 IPC 處理器
+  taskStore = new TaskStore()
+  taskIpcHandler = new TaskIpcHandler(taskStore)
+  taskIpcHandler.register()
 }
 
 /**
@@ -185,12 +201,15 @@ export function initializeApp(): void {
   // 應用退出前清理
   app.on('before-quit', () => {
     timerIpcHandler?.unregister()
+    taskIpcHandler?.unregister()
     timerService?.destroy()
     trayManager?.destroy()
     trayManager = null
     timerService = null
     timerIpcHandler = null
+    taskIpcHandler = null
     notificationService = null
+    taskStore = null
   })
 }
 

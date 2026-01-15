@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { IPC_CHANNELS, TimerData } from '../../shared/types'
+import { IPC_CHANNELS, TimerData, TaskRecord } from '../../shared/types'
 
 // Mock Electron modules
 const mockExposeInMainWorld = vi.fn()
@@ -37,6 +37,11 @@ describe('main/preload.ts', () => {
   it('electronAPI 應包含 versions 物件', async () => {
     const { electronAPI } = await import('../preload')
     expect(electronAPI.versions).toBeDefined()
+  })
+
+  it('electronAPI 應包含 task 物件', async () => {
+    const { electronAPI } = await import('../preload')
+    expect(electronAPI.task).toBeDefined()
   })
 
   describe('timer API', () => {
@@ -191,6 +196,52 @@ describe('main/preload.ts', () => {
         capturedHandler({}, completeData)
       }
       expect(callback).toHaveBeenCalledWith(completeData)
+    })
+  })
+
+  describe('task API', () => {
+    const mockTask: Omit<TaskRecord, 'id' | 'createdAt'> = {
+      name: '測試任務',
+      duration: 300000,
+      actualTime: 305000,
+    }
+
+    const mockTaskRecord: TaskRecord = {
+      id: 'test-id',
+      name: '測試任務',
+      duration: 300000,
+      actualTime: 305000,
+      createdAt: Date.now(),
+    }
+
+    it('task.save 應呼叫 ipcRenderer.invoke', async () => {
+      mockInvoke.mockResolvedValue(mockTaskRecord)
+      const { electronAPI } = await import('../preload')
+
+      const result = await electronAPI.task.save(mockTask)
+
+      expect(mockInvoke).toHaveBeenCalledWith(IPC_CHANNELS.TASK_SAVE, mockTask)
+      expect(result).toEqual(mockTaskRecord)
+    })
+
+    it('task.getAll 應呼叫 ipcRenderer.invoke', async () => {
+      mockInvoke.mockResolvedValue([mockTaskRecord])
+      const { electronAPI } = await import('../preload')
+
+      const result = await electronAPI.task.getAll()
+
+      expect(mockInvoke).toHaveBeenCalledWith(IPC_CHANNELS.TASK_GET_ALL)
+      expect(result).toEqual([mockTaskRecord])
+    })
+
+    it('task.delete 應呼叫 ipcRenderer.invoke', async () => {
+      mockInvoke.mockResolvedValue(true)
+      const { electronAPI } = await import('../preload')
+
+      const result = await electronAPI.task.delete('test-id')
+
+      expect(mockInvoke).toHaveBeenCalledWith(IPC_CHANNELS.TASK_DELETE, 'test-id')
+      expect(result).toBe(true)
     })
   })
 

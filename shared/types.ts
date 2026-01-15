@@ -55,6 +55,22 @@ export interface TimerCompleteEvent {
 export type TimerEvent = TimerTickEvent | TimerStateChangeEvent | TimerCompleteEvent
 
 /**
+ * 任務記錄
+ */
+export interface TaskRecord {
+  /** 唯一識別碼 */
+  id: string
+  /** 任務名稱 */
+  name: string
+  /** 設定的時間（毫秒） */
+  duration: number
+  /** 實際計時時間（毫秒） */
+  actualTime: number
+  /** 建立時間 (Unix timestamp) */
+  createdAt: number
+}
+
+/**
  * IPC Channel 名稱
  */
 export const IPC_CHANNELS = {
@@ -69,6 +85,11 @@ export const IPC_CHANNELS = {
   TIMER_TICK: 'timer:tick',
   TIMER_STATE_CHANGE: 'timer:stateChange',
   TIMER_COMPLETE: 'timer:complete',
+
+  // 任務記錄
+  TASK_SAVE: 'task:save',
+  TASK_GET_ALL: 'task:getAll',
+  TASK_DELETE: 'task:delete',
 } as const
 
 /**

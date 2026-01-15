@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
-import { IPC_CHANNELS, TimerData, TimerState } from '../shared/types'
+import { IPC_CHANNELS, TimerData, TimerState, TaskRecord } from '../shared/types'
 
 /**
  * 計時器狀態變更事件資料
@@ -44,6 +44,13 @@ export const electronAPI = {
       ipcRenderer.on(IPC_CHANNELS.TIMER_COMPLETE, handler)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.TIMER_COMPLETE, handler)
     },
+  },
+  // 任務相關 IPC
+  task: {
+    save: (task: Omit<TaskRecord, 'id' | 'createdAt'>): Promise<TaskRecord> =>
+      ipcRenderer.invoke(IPC_CHANNELS.TASK_SAVE, task),
+    getAll: (): Promise<TaskRecord[]> => ipcRenderer.invoke(IPC_CHANNELS.TASK_GET_ALL),
+    delete: (id: string): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.TASK_DELETE, id),
   },
   // 版本資訊
   versions: {

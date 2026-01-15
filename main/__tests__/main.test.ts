@@ -13,6 +13,16 @@ vi.mock('../tray/TrayManager', () => ({
   TrayManager: vi.fn().mockImplementation(() => mockTrayManagerInstance),
 }))
 
+// Mock TaskStore
+vi.mock('../store/TaskStore', () => ({
+  TaskStore: vi.fn().mockImplementation(() => ({
+    save: vi.fn(),
+    getAll: vi.fn(() => []),
+    delete: vi.fn(),
+    clear: vi.fn(),
+  })),
+}))
+
 // Mock Electron modules
 const mockLoadURL = vi.fn()
 const mockLoadFile = vi.fn()
@@ -309,14 +319,22 @@ describe('main/main.ts', () => {
     })
   })
 
+  describe('getTaskStore', () => {
+    it('初始化前應回傳 null', async () => {
+      const { getTaskStore } = await import('../main')
+      expect(getTaskStore()).toBeNull()
+    })
+  })
+
   describe('initializeServices', () => {
-    it('應初始化計時器和通知服務', async () => {
-      const { initializeServices, getTimerService, getNotificationService } = await import('../main')
+    it('應初始化計時器、通知和任務服務', async () => {
+      const { initializeServices, getTimerService, getNotificationService, getTaskStore } = await import('../main')
 
       initializeServices()
 
       expect(getTimerService()).not.toBeNull()
       expect(getNotificationService()).not.toBeNull()
+      expect(getTaskStore()).not.toBeNull()
     })
 
     it('onComplete 回呼應觸發通知', async () => {

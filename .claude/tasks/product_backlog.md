@@ -42,7 +42,7 @@ Mac 狀態列計時器應用，可設定倒數時間，時間到時提醒但繼�
 - Electron Notification API 系統通知
 - 時間到達時觸發通知
 
-### P6: 任務記錄 `[BACKLOG]`
+### P6: 任務記錄 `[COMPLETED]`
 - 停止後顯示任務輸入對話框
 - 記錄任務資料（名稱、時間、時間戳記）
 - 本地儲存（electron-store）
@@ -99,6 +99,14 @@ Mac 狀態列計時器應用，可設定倒數時間，時間到時提醒但繼�
 - ✅ isSupported() 靜態方法
 - ✅ 與 TimerService onComplete 整合
 - ✅ 測試覆蓋率 ≥95%
+
+### P6: 任務記錄 (2026-01-15)
+- ✅ 建立 TaskStore (electron-store) 本地儲存
+- ✅ 實作 TaskDialog 任務輸入對話框元件
+- ✅ 實作 TaskHistory 歷史清單元件
+- ✅ 建立 Task IPC Handler (save/getAll/delete)
+- ✅ 整合至 main.ts 和 preload.ts
+- ✅ 測試覆蓋率：main ≥95%, renderer 100%
 
 ## 失敗記錄
 

@@ -67,6 +67,9 @@ export const IPC_CHANNELS = {
   TASK_GET_ALL: 'task:getAll',
   TASK_DELETE: 'task:delete',
   TASK_UPDATE: 'task:update',
+
+  // 歷史記錄視窗
+  HISTORY_OPEN: 'history:open',
 } as const
 
 /**

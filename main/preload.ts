@@ -55,6 +55,10 @@ export const electronAPI = {
     update: (data: { id: string; name: string }): Promise<TaskRecord> =>
       ipcRenderer.invoke(IPC_CHANNELS.TASK_UPDATE, data),
   },
+  // 歷史記錄視窗
+  history: {
+    open: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_OPEN),
+  },
   // 版本資訊
   versions: {
     node: () => process.versions.node,

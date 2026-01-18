@@ -7,6 +7,7 @@ import { TaskIpcHandler } from './ipc/taskHandlers'
 import { NotificationService } from './notification/NotificationService'
 import { TaskStore } from './store/TaskStore'
 import { formatTime } from '../shared/types'
+import { registerHistoryHandlers, unregisterHistoryHandlers } from './historyWindow'
 
 // 服務實例
 let trayManager: TrayManager | null = null
@@ -191,6 +192,9 @@ export function initializeServices(): void {
   taskStore = new TaskStore()
   taskIpcHandler = new TaskIpcHandler(taskStore)
   taskIpcHandler.register()
+
+  // 註冊歷史記錄視窗 IPC 處理器
+  registerHistoryHandlers()
 }
 
 /**
@@ -213,6 +217,7 @@ export function initializeApp(): void {
   app.on('before-quit', () => {
     timerIpcHandler?.unregister()
     taskIpcHandler?.unregister()
+    unregisterHistoryHandlers()
     timerService?.destroy()
     trayManager?.destroy()
     trayManager = null

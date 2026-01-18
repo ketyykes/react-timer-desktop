@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Timer } from '../Timer'
-import type { TimerData } from '../../../../../shared/types'
+import { Timer, type TimerProps } from '../Timer'
+import type { TimerData, TimerMode } from '../../../../../shared/types'
 
 // Mock Electron API
 const mockStart = vi.fn()
@@ -23,6 +23,13 @@ const mockTimerAPI = {
   onTick: mockOnTick,
   onStateChange: mockOnStateChange,
   onComplete: mockOnComplete,
+}
+
+// 預設 props
+const defaultProps: TimerProps = {
+  taskDescription: '',
+  onTaskDescriptionChange: vi.fn(),
+  onComplete: vi.fn(),
 }
 
 describe('Timer', () => {
@@ -49,13 +56,13 @@ describe('Timer', () => {
 
   describe('整合測試', () => {
     it('應顯示計時器介面', () => {
-      render(<Timer />)
+      render(<Timer {...defaultProps} />)
       expect(screen.getByTestId('timer-display')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('輸入時間 (例: 5:00)')).toBeInTheDocument()
     })
 
     it('idle 狀態應顯示預設時間按鈕', () => {
-      render(<Timer />)
+      render(<Timer {...defaultProps} />)
       expect(screen.getByRole('button', { name: '5 分鐘' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: '10 分鐘' })).toBeInTheDocument()
     })
@@ -72,7 +79,7 @@ describe('Timer', () => {
       }
       mockStart.mockResolvedValue(mockData)
 
-      render(<Timer />)
+      render(<Timer {...defaultProps} />)
 
       const input = screen.getByPlaceholderText('輸入時間 (例: 5:00)')
       fireEvent.change(input, { target: { value: '05:00' } })
@@ -97,7 +104,7 @@ describe('Timer', () => {
       }
       mockStart.mockResolvedValue(mockData)
 
-      render(<Timer />)
+      render(<Timer {...defaultProps} />)
 
       fireEvent.click(screen.getByRole('button', { name: '5 分鐘' }))
 
@@ -115,7 +122,7 @@ describe('Timer', () => {
         return vi.fn()
       })
 
-      render(<Timer />)
+      render(<Timer {...defaultProps} />)
 
       const runningData: TimerData = {
         state: 'running',
@@ -142,7 +149,7 @@ describe('Timer', () => {
         return vi.fn()
       })
 
-      render(<Timer />)
+      render(<Timer {...defaultProps} />)
 
       const overtimeData: TimerData = {
         state: 'overtime',
@@ -166,7 +173,7 @@ describe('Timer', () => {
 
   describe('任務描述功能', () => {
     it('應顯示任務描述輸入框', () => {
-      render(<Timer />)
+      render(<Timer {...defaultProps} />)
       expect(screen.getByPlaceholderText('這次要做什麼？（選填）')).toBeInTheDocument()
     })
 
@@ -182,10 +189,62 @@ describe('Timer', () => {
       }
       mockStart.mockResolvedValue(mockData)
 
-      render(<Timer />)
+      render(<Timer {...defaultProps} />)
       const presetButton = screen.getByText('5 分鐘')
       await userEvent.click(presetButton)
       expect(screen.queryByPlaceholderText('這次要做什麼？（選填）')).not.toBeInTheDocument()
+    })
+
+    it('應使用 props.taskDescription 作為初始值', () => {
+      render(<Timer {...defaultProps} taskDescription="測試任務" />)
+      const input = screen.getByPlaceholderText('這次要做什麼？（選填）')
+      expect(input).toHaveValue('測試任務')
+    })
+
+    it('輸入變更時應呼叫 onTaskDescriptionChange', async () => {
+      const onTaskDescriptionChange = vi.fn()
+      render(<Timer {...defaultProps} onTaskDescriptionChange={onTaskDescriptionChange} />)
+
+      const input = screen.getByPlaceholderText('這次要做什麼？（選填）')
+      await userEvent.type(input, '新任務')
+
+      expect(onTaskDescriptionChange).toHaveBeenCalled()
+    })
+  })
+
+  describe('完成回調功能', () => {
+    it('計時完成時應呼叫 onComplete', async () => {
+      const onComplete = vi.fn()
+      let completeCallback: ((data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) | null = null
+
+      mockOnComplete.mockImplementation((callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => {
+        completeCallback = callback
+        return vi.fn()
+      })
+
+      render(<Timer {...defaultProps} onComplete={onComplete} />)
+
+      const completeData = {
+        duration: 300000,
+        actualElapsed: 305000,
+        mode: 'countdown' as TimerMode,
+      }
+
+      await act(async () => {
+        completeCallback?.(completeData)
+      })
+
+      expect(onComplete).toHaveBeenCalledWith(completeData)
+    })
+
+    it('unmount 時應清理 subscribeComplete 訂閱', () => {
+      const cleanup = vi.fn()
+      mockOnComplete.mockReturnValue(cleanup)
+
+      const { unmount } = render(<Timer {...defaultProps} />)
+      unmount()
+
+      expect(cleanup).toHaveBeenCalled()
     })
   })
 })

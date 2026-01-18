@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { useTimer } from '@/hooks/useTimer'
 import { parseTime, type TimerMode } from '../../../../shared/types'
 import { TimerDisplay } from './TimerDisplay'
@@ -10,10 +10,22 @@ import { TaskDescriptionInput } from './TaskDescriptionInput'
 import { Button } from '@/components/ui/button'
 
 /**
+ * Timer 元件的 props 介面
+ */
+export interface TimerProps {
+  /** 任務描述 */
+  taskDescription: string
+  /** 任務描述變更回調 */
+  onTaskDescriptionChange: (value: string) => void
+  /** 計時完成回調 */
+  onComplete: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void
+}
+
+/**
  * 計時器主元件
  * 整合時間顯示、控制按鈕、時間輸入和預設時間選擇
  */
-export function Timer() {
+export function Timer({ taskDescription, onTaskDescriptionChange, onComplete }: TimerProps) {
   const {
     state,
     mode,
@@ -24,6 +36,7 @@ export function Timer() {
     resume,
     stop,
     reset,
+    subscribeComplete,
   } = useTimer()
 
   // 時間輸入狀態
@@ -33,11 +46,17 @@ export function Timer() {
   const [isStarting, setIsStarting] = useState(false)
   // 選擇的計時模式
   const [selectedMode, setSelectedMode] = useState<TimerMode>('countdown')
-  // 任務描述
-  const [taskDescription, setTaskDescription] = useState('')
 
   const isIdle = state === 'idle'
   const isActive = state !== 'idle'
+
+  // 訂閱計時完成事件
+  useEffect(() => {
+    const cleanup = subscribeComplete((data) => {
+      onComplete(data)
+    })
+    return cleanup
+  }, [subscribeComplete, onComplete])
 
   // 啟動計時器的共用邏輯
   const startTimer = useCallback(async (ms: number) => {
@@ -102,7 +121,7 @@ export function Timer() {
           />
           <TaskDescriptionInput
             value={taskDescription}
-            onChange={setTaskDescription}
+            onChange={onTaskDescriptionChange}
             disabled={isActive || isStarting}
           />
           <PresetButtons onSelect={handlePresetSelect} disabled={isActive || isStarting} />

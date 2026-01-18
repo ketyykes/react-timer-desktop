@@ -376,4 +376,41 @@ describe('useTimer', () => {
       expect(result.current.remaining).toBe(-5000)
     })
   })
+
+  describe('subscribeComplete', () => {
+    it('應提供 subscribeComplete 方法', () => {
+      const { result } = renderHook(() => useTimer())
+      expect(typeof result.current.subscribeComplete).toBe('function')
+    })
+
+    it('subscribeComplete 應回傳取消訂閱函式', () => {
+      const { result } = renderHook(() => useTimer())
+      const unsubscribe = result.current.subscribeComplete(() => {})
+      expect(typeof unsubscribe).toBe('function')
+    })
+
+    it('subscribeComplete 應正確呼叫 API onComplete', () => {
+      const { result } = renderHook(() => useTimer())
+      const callback = vi.fn()
+
+      result.current.subscribeComplete(callback)
+
+      // mockOnComplete 在 useEffect 中被呼叫一次，在 subscribeComplete 中被呼叫一次
+      expect(mockOnComplete).toHaveBeenCalledWith(callback)
+    })
+
+    it('無 Electron API 時 subscribeComplete 應回傳空函式', () => {
+      Object.defineProperty(window, 'electronAPI', {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      })
+
+      const { result } = renderHook(() => useTimer())
+      const unsubscribe = result.current.subscribeComplete(() => {})
+
+      expect(typeof unsubscribe).toBe('function')
+      expect(() => unsubscribe()).not.toThrow()
+    })
+  })
 })

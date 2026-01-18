@@ -29,6 +29,8 @@ export interface UseTimerReturn {
   stop: () => Promise<void>
   /** 重置計時 */
   reset: () => Promise<void>
+  /** 訂閱計時完成事件 */
+  subscribeComplete: (callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => () => void
 }
 
 /**
@@ -123,6 +125,16 @@ export function useTimer(): UseTimerReturn {
     }
   }, [getTimerAPI])
 
+  // 訂閱計時完成事件
+  const subscribeComplete = useCallback(
+    (callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void): (() => void) => {
+      const api = getTimerAPI()
+      if (!api) return () => {}
+      return api.onComplete(callback)
+    },
+    [getTimerAPI]
+  )
+
   // 訂閱 IPC 事件
   useEffect(() => {
     const api = getTimerAPI()
@@ -163,5 +175,6 @@ export function useTimer(): UseTimerReturn {
     resume,
     stop,
     reset,
+    subscribeComplete,
   }
 }

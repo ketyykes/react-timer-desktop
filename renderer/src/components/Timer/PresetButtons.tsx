@@ -9,9 +9,9 @@ export interface PresetButtonsProps {
 
 const PRESETS = [
   { label: '5 分鐘', ms: 5 * 60 * 1000 },
-  { label: '15 分鐘', ms: 15 * 60 * 1000 },
+  { label: '10 分鐘', ms: 10 * 60 * 1000 },
   { label: '25 分鐘', ms: 25 * 60 * 1000 },
-  { label: '30 分鐘', ms: 30 * 60 * 1000 },
+  { label: '45 分鐘', ms: 45 * 60 * 1000 },
 ] as const
 
 /**

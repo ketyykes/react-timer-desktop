@@ -56,7 +56,7 @@ describe('Timer', () => {
     it('idle 狀態應顯示預設時間按鈕', () => {
       render(<Timer />)
       expect(screen.getByRole('button', { name: '5 分鐘' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: '15 分鐘' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '10 分鐘' })).toBeInTheDocument()
     })
 
     it('輸入時間並按開始應呼叫 start', async () => {

@@ -9,9 +9,9 @@ describe('PresetButtons', () => {
       expect(screen.getByRole('button', { name: '5 分鐘' })).toBeInTheDocument()
     })
 
-    it('應顯示 15 分鐘按鈕', () => {
+    it('應顯示 10 分鐘按鈕', () => {
       render(<PresetButtons onSelect={vi.fn()} disabled={false} />)
-      expect(screen.getByRole('button', { name: '15 分鐘' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '10 分鐘' })).toBeInTheDocument()
     })
 
     it('應顯示 25 分鐘按鈕', () => {
@@ -19,9 +19,9 @@ describe('PresetButtons', () => {
       expect(screen.getByRole('button', { name: '25 分鐘' })).toBeInTheDocument()
     })
 
-    it('應顯示 30 分鐘按鈕', () => {
+    it('應顯示 45 分鐘按鈕', () => {
       render(<PresetButtons onSelect={vi.fn()} disabled={false} />)
-      expect(screen.getByRole('button', { name: '30 分鐘' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '45 分鐘' })).toBeInTheDocument()
     })
   })
 
@@ -33,11 +33,11 @@ describe('PresetButtons', () => {
       expect(onSelect).toHaveBeenCalledWith(300000)
     })
 
-    it('點擊 15 分鐘應傳入 900000 毫秒', () => {
+    it('點擊 10 分鐘應傳入 600000 毫秒', () => {
       const onSelect = vi.fn()
       render(<PresetButtons onSelect={onSelect} disabled={false} />)
-      fireEvent.click(screen.getByRole('button', { name: '15 分鐘' }))
-      expect(onSelect).toHaveBeenCalledWith(900000)
+      fireEvent.click(screen.getByRole('button', { name: '10 分鐘' }))
+      expect(onSelect).toHaveBeenCalledWith(600000)
     })
 
     it('點擊 25 分鐘應傳入 1500000 毫秒', () => {
@@ -47,11 +47,11 @@ describe('PresetButtons', () => {
       expect(onSelect).toHaveBeenCalledWith(1500000)
     })
 
-    it('點擊 30 分鐘應傳入 1800000 毫秒', () => {
+    it('點擊 45 分鐘應傳入 2700000 毫秒', () => {
       const onSelect = vi.fn()
       render(<PresetButtons onSelect={onSelect} disabled={false} />)
-      fireEvent.click(screen.getByRole('button', { name: '30 分鐘' }))
-      expect(onSelect).toHaveBeenCalledWith(1800000)
+      fireEvent.click(screen.getByRole('button', { name: '45 分鐘' }))
+      expect(onSelect).toHaveBeenCalledWith(2700000)
     })
   })
 

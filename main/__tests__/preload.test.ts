@@ -254,6 +254,23 @@ describe('main/preload.ts', () => {
       expect(mockInvoke).toHaveBeenCalledWith(IPC_CHANNELS.TASK_DELETE, 'test-id')
       expect(result).toBe(true)
     })
+
+    it('task.update 應呼叫 ipcRenderer.invoke', async () => {
+      const updatedTaskRecord: TaskRecord = {
+        id: 'test-id',
+        name: '更新後的名稱',
+        duration: 300000,
+        actualTime: 305000,
+        createdAt: Date.now(),
+      }
+      mockInvoke.mockResolvedValue(updatedTaskRecord)
+      const { electronAPI } = await import('../preload')
+
+      const result = await electronAPI.task.update({ id: 'test-id', name: '更新後的名稱' })
+
+      expect(mockInvoke).toHaveBeenCalledWith(IPC_CHANNELS.TASK_UPDATE, { id: 'test-id', name: '更新後的名稱' })
+      expect(result).toEqual(updatedTaskRecord)
+    })
   })
 
   describe('versions API', () => {

@@ -1,13 +1,12 @@
 import { useCallback, useState } from 'react'
 import { useTimer } from '@/hooks/useTimer'
-import { parseTime, type TimerMode } from '../../../../shared/types'
+import { type TimerMode } from '../../../../shared/types'
 import { TimerDisplay } from './TimerDisplay'
 import { TimerControls } from './TimerControls'
-import { TimeInput } from './TimeInput'
 import { PresetButtons } from './PresetButtons'
-import { ModeSelector } from './ModeSelector'
 import { TaskDescriptionInput } from './TaskDescriptionInput'
 import { Button } from '@/components/ui/button'
+import { Timer as TimerIcon, ArrowUp } from 'lucide-react'
 
 /**
  * Timer 元件的 props 介面
@@ -40,9 +39,8 @@ export function Timer({ taskDescription, onTaskDescriptionChange, onStop }: Time
     reset,
   } = useTimer()
 
-  // 時間輸入狀態
-  const [inputValue, setInputValue] = useState('')
-  const [inputError, setInputError] = useState<string | null>(null)
+  // 用戶透過 TimerDisplay 設定的待開始時間（毫秒）
+  const [pendingTime, setPendingTime] = useState<number>(0)
   // 防止按鈕連點
   const [isStarting, setIsStarting] = useState(false)
   // 選擇的計時模式
@@ -71,61 +69,52 @@ export function Timer({ taskDescription, onTaskDescriptionChange, onStop }: Time
     setIsStarting(true)
     try {
       await start(ms, selectedMode)
-      setInputValue('')
-      setInputError(null)
+      setPendingTime(0)
     } finally {
       setIsStarting(false)
     }
   }, [start, isStarting, selectedMode])
 
-  // 處理時間輸入變更
-  const handleInputChange = useCallback((value: string) => {
-    setInputValue(value)
-    setInputError(null)
+  // 處理 TimerDisplay 時間變更（用戶輸入）
+  const handleTimeChange = useCallback((ms: number) => {
+    setPendingTime(ms)
   }, [])
 
-  // 處理時間輸入送出（Enter 鍵）
-  const handleTimeSubmit = useCallback(async (ms: number) => {
-    await startTimer(ms)
-  }, [startTimer])
-
-  // 處理預設按鈕選擇
+  // 處理預設按鈕選擇 - 直接開始計時
   const handlePresetSelect = useCallback(async (ms: number) => {
     await startTimer(ms)
   }, [startTimer])
 
-  // 處理開始按鈕點擊
+  // 處理開始按鈕點擊（使用 pendingTime）
   const handleStart = useCallback(async () => {
-    const trimmed = inputValue.trim()
-    if (!trimmed) {
-      setInputError('請輸入時間')
-      return
+    if (pendingTime > 0) {
+      await startTimer(pendingTime)
     }
+  }, [pendingTime, startTimer])
 
-    try {
-      const ms = parseTime(trimmed)
-      await startTimer(ms)
-    } catch {
-      setInputError('無效的時間格式')
-    }
-  }, [inputValue, startTimer])
+  // 切換計時模式
+  const toggleMode = useCallback(() => {
+    setSelectedMode((prev) => (prev === 'countdown' ? 'countup' : 'countdown'))
+  }, [])
 
   // 顯示的模式：計時中用實際模式，idle 時用選擇的模式
   const displayMode = isIdle ? selectedMode : mode
 
+  // 顯示時間：idle 時顯示 pendingTime，否則顯示 displayTime
+  const timeToDisplay = isIdle ? pendingTime : displayTime
+
   return (
     <div className="flex flex-col items-center justify-center gap-6 text-center">
-      <TimerDisplay displayTime={displayTime} isOvertime={isOvertime} mode={displayMode} />
+      <TimerDisplay
+        displayTime={timeToDisplay}
+        isOvertime={isOvertime}
+        mode={displayMode}
+        editable={isIdle}
+        onTimeChange={handleTimeChange}
+      />
 
       {isIdle && (
         <div className="flex flex-col items-center gap-4 w-full">
-          <TimeInput
-            value={inputValue}
-            onChange={handleInputChange}
-            onSubmit={handleTimeSubmit}
-            disabled={isActive || isStarting}
-            error={inputError}
-          />
           <TaskDescriptionInput
             value={taskDescription}
             onChange={onTaskDescriptionChange}
@@ -133,26 +122,47 @@ export function Timer({ taskDescription, onTaskDescriptionChange, onStop }: Time
           />
           <PresetButtons onSelect={handlePresetSelect} disabled={isActive || isStarting} />
           <div className="flex gap-2 items-center">
-            <ModeSelector
-              mode={selectedMode}
-              onChange={setSelectedMode}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleMode}
               disabled={isActive || isStarting}
-            />
-            <Button onClick={handleStart} disabled={isStarting}>
-              開始
+              className="flex items-center gap-1"
+            >
+              {selectedMode === 'countdown' ? (
+                <>
+                  <TimerIcon className="h-4 w-4" />
+                  倒數
+                </>
+              ) : (
+                <>
+                  <ArrowUp className="h-4 w-4" />
+                  正數
+                </>
+              )}
             </Button>
+            {pendingTime > 0 && (
+              <Button onClick={handleStart} disabled={isStarting}>
+                開始
+              </Button>
+            )}
           </div>
         </div>
       )}
 
       {!isIdle && (
-        <TimerControls
-          state={state}
-          onPause={pause}
-          onResume={resume}
-          onStop={handleStop}
-          onReset={reset}
-        />
+        <div className="flex flex-col items-center gap-4">
+          {taskDescription && (
+            <p className="text-sm text-gray-600">「{taskDescription}」</p>
+          )}
+          <TimerControls
+            state={state}
+            onPause={pause}
+            onResume={resume}
+            onStop={handleStop}
+            onReset={reset}
+          />
+        </div>
       )}
     </div>
   )

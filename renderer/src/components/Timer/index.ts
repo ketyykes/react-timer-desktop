@@ -1,7 +1,6 @@
 export { Timer } from './Timer'
 export { TimerDisplay } from './TimerDisplay'
 export { TimerControls } from './TimerControls'
-export { TimeInput } from './TimeInput'
 export { PresetButtons } from './PresetButtons'
 export { TaskDescriptionInput } from './TaskDescriptionInput'
 export type { TaskDescriptionInputProps } from './TaskDescriptionInput'

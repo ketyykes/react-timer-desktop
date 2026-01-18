@@ -70,6 +70,24 @@ export class TaskStore {
   }
 
   /**
+   * 更新任務記錄
+   * @param id 任務 ID
+   * @param data 要更新的資料
+   * @returns 更新後的任務記錄
+   * @throws 找不到任務時拋出錯誤
+   */
+  update(id: string, data: { name: string }): TaskRecord {
+    const tasks = this.store.get('tasks') as TaskRecord[]
+    const index = tasks.findIndex((t) => t.id === id)
+    if (index === -1) {
+      throw new Error(`Task not found: ${id}`)
+    }
+    tasks[index] = { ...tasks[index], ...data }
+    this.store.set('tasks', tasks)
+    return tasks[index]
+  }
+
+  /**
    * 清除所有任務
    */
   clear(): void {

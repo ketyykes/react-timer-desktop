@@ -17,6 +17,9 @@ const mockOnComplete = vi.fn()
 const mockTaskSave = vi.fn()
 const mockTaskGetAll = vi.fn()
 const mockTaskDelete = vi.fn()
+const mockTaskUpdate = vi.fn()
+
+const mockHistoryOpen = vi.fn()
 
 const mockTimerAPI = {
   start: mockStart,
@@ -33,6 +36,11 @@ const mockTaskAPI = {
   save: mockTaskSave,
   getAll: mockTaskGetAll,
   delete: mockTaskDelete,
+  update: mockTaskUpdate,
+}
+
+const mockHistoryAPI = {
+  open: mockHistoryOpen,
 }
 
 describe('App', () => {
@@ -47,6 +55,7 @@ describe('App', () => {
       value: {
         timer: mockTimerAPI,
         task: mockTaskAPI,
+        history: mockHistoryAPI,
       },
       writable: true,
       configurable: true,
@@ -61,52 +70,87 @@ describe('App', () => {
     })
   })
 
-  describe('Tab 切換', () => {
-    it('應顯示計時器和歷史記錄兩個 Tab', () => {
+  describe('單頁整合佈局', () => {
+    it('應該同時顯示計時器和今日記錄', async () => {
       render(<App />)
-      expect(screen.getByRole('tab', { name: '計時器' })).toBeInTheDocument()
-      expect(screen.getByRole('tab', { name: '歷史記錄' })).toBeInTheDocument()
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+
+      expect(screen.getByTestId('timer-display')).toBeInTheDocument()
+      expect(screen.getByText('今日')).toBeInTheDocument()
     })
 
-    it('預設顯示計時器 Tab', () => {
+    it('不應該有 Tabs', () => {
       render(<App />)
-      expect(screen.getByRole('tab', { name: '計時器' })).toHaveAttribute('aria-selected', 'true')
+
+      expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
     })
 
-    it('點擊歷史記錄 Tab 應切換內容', async () => {
+    it('點擊查看全部應呼叫 history.open', async () => {
+      const user = userEvent.setup()
       render(<App />)
-      const historyTab = screen.getByRole('tab', { name: '歷史記錄' })
-      await userEvent.click(historyTab)
-      expect(screen.getByText('任務歷史')).toBeInTheDocument()
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+
+      await user.click(screen.getByText('查看全部'))
+
+      expect(mockHistoryOpen).toHaveBeenCalled()
     })
 
-    it('切換到歷史記錄 Tab 應載入任務清單', async () => {
+    it('應該載入並顯示今日任務', async () => {
+      const today = new Date()
       const mockTasks: TaskRecord[] = [
         {
           id: '1',
-          name: '測試任務',
+          name: '今日任務',
           duration: 300000,
           actualTime: 310000,
-          createdAt: Date.now(),
+          createdAt: today.getTime(),
         },
       ]
       mockTaskGetAll.mockResolvedValue(mockTasks)
 
       render(<App />)
-      const historyTab = screen.getByRole('tab', { name: '歷史記錄' })
-      await userEvent.click(historyTab)
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
       expect(mockTaskGetAll).toHaveBeenCalled()
-      expect(screen.getByText('測試任務')).toBeInTheDocument()
+      expect(screen.getByText('今日任務')).toBeInTheDocument()
+    })
+
+    it('不應該顯示非今日的任務', async () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const mockTasks: TaskRecord[] = [
+        {
+          id: '1',
+          name: '昨日任務',
+          duration: 300000,
+          actualTime: 310000,
+          createdAt: yesterday.getTime(),
+        },
+      ]
+      mockTaskGetAll.mockResolvedValue(mockTasks)
+
+      render(<App />)
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+
+      expect(screen.queryByText('昨日任務')).not.toBeInTheDocument()
+      expect(screen.getByText('今天還沒有完成任務')).toBeInTheDocument()
     })
   })
 
   describe('Timer 整合', () => {
-    it('應在計時器 Tab 中顯示 Timer 元件', () => {
+    it('應顯示 Timer 元件', () => {
       render(<App />)
       expect(screen.getByTestId('timer-display')).toBeInTheDocument()
     })
@@ -167,7 +211,7 @@ describe('App', () => {
       expect(screen.getByText('記錄任務')).toBeInTheDocument()
     })
 
-    it('儲存任務後應關閉對話框', async () => {
+    it('儲存任務後應關閉對話框並重新載入任務', async () => {
       let tickCallback: ((data: TimerData) => void) | null = null
       mockOnTick.mockImplementation((callback: (data: TimerData) => void) => {
         tickCallback = callback
@@ -208,6 +252,9 @@ describe('App', () => {
         await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
+      // 清除初始載入的呼叫
+      mockTaskGetAll.mockClear()
+
       // 點擊儲存
       const saveButton = screen.getByRole('button', { name: '儲存' })
       await userEvent.click(saveButton)
@@ -217,6 +264,7 @@ describe('App', () => {
       })
 
       expect(mockTaskSave).toHaveBeenCalled()
+      expect(mockTaskGetAll).toHaveBeenCalled() // 儲存後重新載入
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
 
@@ -322,15 +370,16 @@ describe('App', () => {
     })
   })
 
-  describe('TaskHistory 整合', () => {
+  describe('TodayTasks 整合', () => {
     it('刪除任務後應重新載入清單', async () => {
+      const today = new Date()
       const mockTasks: TaskRecord[] = [
         {
           id: '1',
           name: '待刪除任務',
           duration: 300000,
           actualTime: 310000,
-          createdAt: Date.now(),
+          createdAt: today.getTime(),
         },
       ]
       mockTaskGetAll.mockResolvedValue(mockTasks)
@@ -338,27 +387,61 @@ describe('App', () => {
 
       render(<App />)
 
-      // 切換到歷史記錄
-      const historyTab = screen.getByRole('tab', { name: '歷史記錄' })
-      await userEvent.click(historyTab)
-
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
       // 點擊刪除
-      const deleteButton = screen.getByRole('button', { name: '刪除' })
+      const deleteButton = screen.getByLabelText('刪除')
+      await userEvent.click(deleteButton)
+
+      // 確認刪除
+      await userEvent.click(screen.getByText('確認刪除'))
 
       // 刪除後清空清單
       mockTaskGetAll.mockResolvedValue([])
-      await userEvent.click(deleteButton)
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
       expect(mockTaskDelete).toHaveBeenCalledWith('1')
-      expect(mockTaskGetAll).toHaveBeenCalledTimes(2)
+    })
+
+    it('更新任務名稱後應重新載入清單', async () => {
+      const today = new Date()
+      const mockTasks: TaskRecord[] = [
+        {
+          id: '1',
+          name: '原始名稱',
+          duration: 300000,
+          actualTime: 310000,
+          createdAt: today.getTime(),
+        },
+      ]
+      mockTaskGetAll.mockResolvedValue(mockTasks)
+      mockTaskUpdate.mockResolvedValue(undefined)
+
+      render(<App />)
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+
+      // 點擊任務名稱進入編輯模式
+      await userEvent.click(screen.getByText('原始名稱'))
+
+      // 修改名稱 - 選擇編輯中的 input（在 today-task-item 內的）
+      const taskItem = screen.getByTestId('today-task-item')
+      const input = taskItem.querySelector('input') as HTMLInputElement
+      await userEvent.clear(input)
+      await userEvent.type(input, '新名稱{Enter}')
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+
+      expect(mockTaskUpdate).toHaveBeenCalledWith({ id: '1', name: '新名稱' })
     })
   })
 })

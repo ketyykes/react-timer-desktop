@@ -17,12 +17,14 @@ vi.mock('electron', () => ({
 const mockSave = vi.fn()
 const mockGetAll = vi.fn()
 const mockDelete = vi.fn()
+const mockUpdate = vi.fn()
 
 vi.mock('../../store/TaskStore', () => ({
   TaskStore: vi.fn().mockImplementation(() => ({
     save: mockSave,
     getAll: mockGetAll,
     delete: mockDelete,
+    update: mockUpdate,
   })),
 }))
 
@@ -52,6 +54,7 @@ describe('TaskIpcHandler', () => {
       expect(mockHandle).toHaveBeenCalledWith(IPC_CHANNELS.TASK_SAVE, expect.any(Function))
       expect(mockHandle).toHaveBeenCalledWith(IPC_CHANNELS.TASK_GET_ALL, expect.any(Function))
       expect(mockHandle).toHaveBeenCalledWith(IPC_CHANNELS.TASK_DELETE, expect.any(Function))
+      expect(mockHandle).toHaveBeenCalledWith(IPC_CHANNELS.TASK_UPDATE, expect.any(Function))
     })
   })
 
@@ -67,6 +70,7 @@ describe('TaskIpcHandler', () => {
       expect(mockRemoveHandler).toHaveBeenCalledWith(IPC_CHANNELS.TASK_SAVE)
       expect(mockRemoveHandler).toHaveBeenCalledWith(IPC_CHANNELS.TASK_GET_ALL)
       expect(mockRemoveHandler).toHaveBeenCalledWith(IPC_CHANNELS.TASK_DELETE)
+      expect(mockRemoveHandler).toHaveBeenCalledWith(IPC_CHANNELS.TASK_UPDATE)
     })
   })
 
@@ -147,6 +151,66 @@ describe('TaskIpcHandler', () => {
 
       expect(mockDelete).toHaveBeenCalledWith('test-id')
       expect(result).toBe(true)
+    })
+
+    it('TASK_UPDATE 應呼叫 store.update()', async () => {
+      const updatedTask: TaskRecord = {
+        id: 'test-id',
+        name: '更新後的名稱',
+        duration: 300000,
+        actualTime: 305000,
+        createdAt: Date.now(),
+      }
+      mockUpdate.mockReturnValue(updatedTask)
+
+      const { TaskIpcHandler } = await import('../taskHandlers')
+      const { TaskStore } = await import('../../store/TaskStore')
+      const store = new TaskStore()
+      const handler = new TaskIpcHandler(store)
+
+      handler.register()
+
+      // 取得註冊的處理函式
+      const updateHandler = mockHandle.mock.calls.find(
+        (call) => call[0] === IPC_CHANNELS.TASK_UPDATE
+      )?.[1]
+
+      expect(updateHandler).toBeDefined()
+
+      const input = { id: 'test-id', name: '更新後的名稱' }
+      const result = await updateHandler(null, input)
+
+      expect(mockUpdate).toHaveBeenCalledWith('test-id', { name: '更新後的名稱' })
+      expect(result).toEqual(updatedTask)
+    })
+
+    it('TASK_UPDATE 找不到任務時應傳遞錯誤', async () => {
+      const { TaskIpcHandler } = await import('../taskHandlers')
+      const { TaskStore } = await import('../../store/TaskStore')
+      const store = new TaskStore()
+      const handler = new TaskIpcHandler(store)
+
+      handler.register()
+
+      const updateHandler = mockHandle.mock.calls.find(
+        (call) => call[0] === IPC_CHANNELS.TASK_UPDATE
+      )?.[1]
+
+      expect(updateHandler).toBeDefined()
+
+      // 設定 mock 在下次呼叫時拋出錯誤
+      mockUpdate.mockImplementationOnce(() => {
+        const err = new Error('Task not found: not-exist')
+        throw err
+      })
+
+      try {
+        await updateHandler(null, { id: 'not-exist', name: 'test' })
+        // 如果沒有拋出錯誤，測試應該失敗
+        expect.fail('應該拋出錯誤')
+      } catch (err) {
+        expect((err as Error).message).toBe('Task not found: not-exist')
+      }
     })
   })
 

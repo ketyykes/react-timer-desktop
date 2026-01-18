@@ -54,6 +54,14 @@ interface ElectronTaskAPI {
   save: (task: Omit<TaskRecord, 'id' | 'createdAt'>) => Promise<TaskRecord>
   getAll: () => Promise<TaskRecord[]>
   delete: (id: string) => Promise<void>
+  update: (data: { id: string; name: string }) => Promise<TaskRecord>
+}
+
+/**
+ * Electron History API 型別定義
+ */
+interface ElectronHistoryAPI {
+  open: () => void
 }
 
 declare global {
@@ -61,6 +69,7 @@ declare global {
     electronAPI?: {
       timer: ElectronTimerAPI
       task: ElectronTaskAPI
+      history: ElectronHistoryAPI
     }
   }
 }

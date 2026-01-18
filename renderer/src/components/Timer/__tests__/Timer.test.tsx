@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Timer, type TimerProps } from '../Timer'
 import type { TimerData } from '../../../../../shared/types'
@@ -58,7 +58,8 @@ describe('Timer', () => {
     it('應顯示計時器介面', () => {
       render(<Timer {...defaultProps} />)
       expect(screen.getByTestId('timer-display')).toBeInTheDocument()
-      expect(screen.getByPlaceholderText('輸入時間 (例: 5:00)')).toBeInTheDocument()
+      // 新 UI 使用 TimerDisplay 的可編輯模式，不再有獨立 TimeInput
+      expect(screen.getByPlaceholderText('這次要做什麼？（選填）')).toBeInTheDocument()
     })
 
     it('idle 狀態應顯示預設時間按鈕', () => {
@@ -67,7 +68,8 @@ describe('Timer', () => {
       expect(screen.getByRole('button', { name: '10 分鐘' })).toBeInTheDocument()
     })
 
-    it('輸入時間並按開始應呼叫 start', async () => {
+    it('透過 TimerDisplay 輸入時間並按開始應呼叫 start', async () => {
+      const user = userEvent.setup()
       const mockData: TimerData = {
         state: 'running',
         mode: 'countdown',
@@ -81,15 +83,21 @@ describe('Timer', () => {
 
       render(<Timer {...defaultProps} />)
 
-      const input = screen.getByPlaceholderText('輸入時間 (例: 5:00)')
-      fireEvent.change(input, { target: { value: '05:00' } })
-      fireEvent.keyDown(input, { key: 'Enter' })
+      // 點擊 TimerDisplay 進入編輯模式
+      await user.click(screen.getByTestId('timer-display'))
+      const input = screen.getByPlaceholderText('0:00')
+      await user.type(input, '5:00')
+      await user.keyboard('{Enter}')
 
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 0))
+      // 等待「開始」按鈕出現並點擊
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: '開始' })).toBeInTheDocument()
       })
+      await user.click(screen.getByRole('button', { name: '開始' }))
 
-      expect(mockStart).toHaveBeenCalledWith(300000, 'countdown')
+      await waitFor(() => {
+        expect(mockStart).toHaveBeenCalledWith(300000, 'countdown')
+      })
     })
 
     it('點擊預設時間按鈕應呼叫 start', async () => {
@@ -209,6 +217,66 @@ describe('Timer', () => {
       await userEvent.type(input, '新任務')
 
       expect(onTaskDescriptionChange).toHaveBeenCalled()
+    })
+  })
+
+  describe('新 UI 流程', () => {
+    it('點擊 TimerDisplay 應可輸入時間', async () => {
+      const user = userEvent.setup()
+      render(<Timer {...defaultProps} />)
+
+      await user.click(screen.getByTestId('timer-display'))
+      // TimerDisplay 進入編輯模式時會顯示 placeholder 為 "0:00" 的 input
+      expect(screen.getByPlaceholderText('0:00')).toBeInTheDocument()
+    })
+
+    it('點擊預設按鈕應直接開始計時', async () => {
+      const user = userEvent.setup()
+      const mockData: TimerData = {
+        state: 'running',
+        mode: 'countdown',
+        duration: 300000,
+        remaining: 300000,
+        elapsed: 0,
+        isOvertime: false,
+        displayTime: 300000,
+      }
+      mockStart.mockResolvedValue(mockData)
+
+      render(<Timer {...defaultProps} />)
+
+      await user.click(screen.getByText('5 分鐘'))
+
+      await waitFor(() => {
+        expect(mockStart).toHaveBeenCalledWith(300000, 'countdown')
+      })
+    })
+
+    it('running 狀態應顯示任務描述（唯讀）', async () => {
+      let tickCallback: ((data: TimerData) => void) | null = null
+      mockOnTick.mockImplementation((callback: (data: TimerData) => void) => {
+        tickCallback = callback
+        return vi.fn()
+      })
+
+      render(<Timer {...defaultProps} taskDescription="測試任務" />)
+
+      const runningData: TimerData = {
+        state: 'running',
+        mode: 'countdown',
+        duration: 300000,
+        remaining: 295000,
+        elapsed: 5000,
+        isOvertime: false,
+        displayTime: 295000,
+      }
+
+      await act(async () => {
+        tickCallback?.(runningData)
+      })
+
+      expect(screen.getByText('「測試任務」')).toBeInTheDocument()
+      expect(screen.queryByPlaceholderText('這次要做什麼？（選填）')).not.toBeInTheDocument()
     })
   })
 

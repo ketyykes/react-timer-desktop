@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Timer } from '../Timer'
 import type { TimerData } from '../../../../../shared/types'
 
@@ -50,7 +51,7 @@ describe('Timer', () => {
     it('應顯示計時器介面', () => {
       render(<Timer />)
       expect(screen.getByTestId('timer-display')).toBeInTheDocument()
-      expect(screen.getByRole('textbox')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('輸入時間 (例: 5:00)')).toBeInTheDocument()
     })
 
     it('idle 狀態應顯示預設時間按鈕', () => {
@@ -73,7 +74,7 @@ describe('Timer', () => {
 
       render(<Timer />)
 
-      const input = screen.getByRole('textbox')
+      const input = screen.getByPlaceholderText('輸入時間 (例: 5:00)')
       fireEvent.change(input, { target: { value: '05:00' } })
       fireEvent.keyDown(input, { key: 'Enter' })
 
@@ -160,6 +161,31 @@ describe('Timer', () => {
       expect(screen.getByText('-00:05')).toBeInTheDocument()
       const display = screen.getByTestId('timer-display')
       expect(display).toHaveClass('text-red-500')
+    })
+  })
+
+  describe('任務描述功能', () => {
+    it('應顯示任務描述輸入框', () => {
+      render(<Timer />)
+      expect(screen.getByPlaceholderText('這次要做什麼？（選填）')).toBeInTheDocument()
+    })
+
+    it('計時中不應顯示任務描述輸入框', async () => {
+      const mockData: TimerData = {
+        state: 'running',
+        mode: 'countdown',
+        duration: 300000,
+        remaining: 300000,
+        elapsed: 0,
+        isOvertime: false,
+        displayTime: 300000,
+      }
+      mockStart.mockResolvedValue(mockData)
+
+      render(<Timer />)
+      const presetButton = screen.getByText('5 分鐘')
+      await userEvent.click(presetButton)
+      expect(screen.queryByPlaceholderText('這次要做什麼？（選填）')).not.toBeInTheDocument()
     })
   })
 })

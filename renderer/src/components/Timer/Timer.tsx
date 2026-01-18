@@ -6,6 +6,7 @@ import { TimerControls } from './TimerControls'
 import { TimeInput } from './TimeInput'
 import { PresetButtons } from './PresetButtons'
 import { ModeSelector } from './ModeSelector'
+import { TaskDescriptionInput } from './TaskDescriptionInput'
 import { Button } from '@/components/ui/button'
 
 /**
@@ -32,6 +33,8 @@ export function Timer() {
   const [isStarting, setIsStarting] = useState(false)
   // 選擇的計時模式
   const [selectedMode, setSelectedMode] = useState<TimerMode>('countdown')
+  // 任務描述
+  const [taskDescription, setTaskDescription] = useState('')
 
   const isIdle = state === 'idle'
   const isActive = state !== 'idle'
@@ -96,6 +99,11 @@ export function Timer() {
             onSubmit={handleTimeSubmit}
             disabled={isActive || isStarting}
             error={inputError}
+          />
+          <TaskDescriptionInput
+            value={taskDescription}
+            onChange={setTaskDescription}
+            disabled={isActive || isStarting}
           />
           <PresetButtons onSelect={handlePresetSelect} disabled={isActive || isStarting} />
           <div className="flex gap-2 items-center">

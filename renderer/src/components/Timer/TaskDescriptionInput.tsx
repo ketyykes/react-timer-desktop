@@ -25,7 +25,7 @@ export function TaskDescriptionInput({
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       placeholder="這次要做什麼？（選填）"
-      className="text-center"
+      className="text-center bg-white/10 border-white/20 text-white placeholder:text-white/50"
     />
   )
 }

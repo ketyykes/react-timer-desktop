@@ -124,27 +124,17 @@
   }
 }
 
-/* Liquid Glass 毛玻璃效果 */
+/* Liquid Glass 毛玻璃效果 - 配合 Electron vibrancy */
 @layer components {
   .glass-container {
-    @apply bg-white/70;
+    @apply bg-transparent;  /* 完全透明，讓 vibrancy 顯示 */
   }
 
   .glass-section {
-    @apply bg-white/40;
+    @apply bg-white/5;  /* 極淡的分隔效果 */
   }
 
   .glass-divider {
-    @apply border-white/30;
-  }
-
-  /* 降級處理：不支援 backdrop-filter 時使用較不透明的背景 */
-  @supports not (backdrop-filter: blur(1px)) {
-    .glass-container {
-      @apply bg-white/95;
-    }
-    .glass-section {
-      @apply bg-white/80;
-    }
+    @apply border-white/10;
   }
 }

@@ -87,9 +87,9 @@ export function TimerDisplay({
         onBlur={handleBlur}
         placeholder="0:00"
         className={cn(
-          'text-5xl font-mono font-bold tabular-nums text-center',
-          'bg-transparent border-b-2 border-blue-500 outline-none',
-          'w-32'
+          'text-5xl font-mono font-bold tabular-nums text-center text-white',
+          'bg-transparent border-b-2 border-blue-400 outline-none',
+          'w-32 placeholder:text-white/50'
         )}
       />
     )
@@ -101,9 +101,9 @@ export function TimerDisplay({
       onClick={handleClick}
       className={cn(
         'text-5xl font-mono font-bold tabular-nums',
-        'text-gray-900',
-        isOvertime && 'text-red-500',
-        editable && 'cursor-pointer hover:text-blue-600 transition-colors'
+        'text-white',
+        isOvertime && 'text-red-400',
+        editable && 'cursor-pointer hover:text-blue-400 transition-colors'
       )}
     >
       {prefix}{formattedTime}

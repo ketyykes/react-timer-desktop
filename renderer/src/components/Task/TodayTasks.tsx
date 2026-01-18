@@ -69,14 +69,14 @@ export function TodayTasks({ tasks, onUpdate, onDelete, onViewAll }: TodayTasksP
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-muted-foreground">今日</span>
+        <span className="text-sm font-medium text-white/70">今日</span>
         <Button variant="link" size="sm" className="h-auto p-0" onClick={onViewAll}>
           查看全部
         </Button>
       </div>
 
       {displayTasks.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-4">
+        <p className="text-sm text-white/50 text-center py-4">
           今天還沒有完成任務
         </p>
       ) : (
@@ -85,7 +85,7 @@ export function TodayTasks({ tasks, onUpdate, onDelete, onViewAll }: TodayTasksP
             <li
               key={task.id}
               data-testid="today-task-item"
-              className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-white/50 text-sm"
+              className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-white/10 text-sm text-white"
             >
               {deletingId === task.id ? (
                 // 刪除確認狀態
@@ -119,27 +119,27 @@ export function TodayTasks({ tasks, onUpdate, onDelete, onViewAll }: TodayTasksP
                   onKeyDown={handleEditKeyDown}
                   onBlur={handleEditSubmit}
                   autoFocus
-                  className="flex-1 bg-transparent border-b border-blue-500 outline-none text-sm"
+                  className="flex-1 bg-transparent border-b border-blue-400 outline-none text-sm text-white"
                 />
               ) : (
                 // 正常狀態
                 <>
                   <span
-                    className="flex-1 truncate cursor-pointer hover:text-blue-600"
+                    className="flex-1 truncate cursor-pointer hover:text-blue-400"
                     onClick={() => handleNameClick(task)}
                   >
                     {task.name}
                   </span>
-                  <span className="text-muted-foreground tabular-nums">
+                  <span className="text-white/60 tabular-nums">
                     {formatTime(task.duration)}
                   </span>
-                  <span className="text-muted-foreground tabular-nums">
+                  <span className="text-white/60 tabular-nums">
                     {formatTimeOfDay(task.createdAt)}
                   </span>
                   <button
                     aria-label="刪除"
                     onClick={() => handleDeleteClick(task.id)}
-                    className="text-muted-foreground hover:text-destructive"
+                    className="text-white/60 hover:text-red-400"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>

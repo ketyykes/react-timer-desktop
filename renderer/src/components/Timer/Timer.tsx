@@ -153,7 +153,7 @@ export function Timer({ taskDescription, onTaskDescriptionChange, onStop }: Time
       {!isIdle && (
         <div className="flex flex-col items-center gap-3">
           {taskDescription && (
-            <p className="text-sm text-gray-600">「{taskDescription}」</p>
+            <p className="text-sm text-white/70">「{taskDescription}」</p>
           )}
           <TimerControls
             state={state}

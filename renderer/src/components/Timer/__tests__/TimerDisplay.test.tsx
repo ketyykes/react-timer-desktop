@@ -30,13 +30,13 @@ describe('TimerDisplay', () => {
     it('超時時應套用 overtime 樣式', () => {
       render(<TimerDisplay displayTime={-5000} isOvertime={true} mode="countdown" />)
       const display = screen.getByTestId('timer-display')
-      expect(display).toHaveClass('text-red-500')
+      expect(display).toHaveClass('text-red-400')
     })
 
     it('非超時時不應套用 overtime 樣式', () => {
       render(<TimerDisplay displayTime={5000} isOvertime={false} mode="countdown" />)
       const display = screen.getByTestId('timer-display')
-      expect(display).not.toHaveClass('text-red-500')
+      expect(display).not.toHaveClass('text-red-400')
     })
   })
 
@@ -54,7 +54,7 @@ describe('TimerDisplay', () => {
     it('正數模式超時時應套用 overtime 樣式', () => {
       render(<TimerDisplay displayTime={65000} isOvertime={true} mode="countup" />)
       const display = screen.getByTestId('timer-display')
-      expect(display).toHaveClass('text-red-500')
+      expect(display).toHaveClass('text-red-400')
     })
   })
 

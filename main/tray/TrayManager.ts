@@ -88,9 +88,9 @@ export class TrayManager {
       return {
         ...baseOptions,
         transparent: true,
-        vibrancy: 'popover',
+        vibrancy: 'under-window',  // 深色毛玻璃效果，類似系統選單
         visualEffectState: 'active',
-        backgroundColor: undefined, // 讓 vibrancy 完全控制背景
+        backgroundColor: undefined,
         hasShadow: true,
       }
     }

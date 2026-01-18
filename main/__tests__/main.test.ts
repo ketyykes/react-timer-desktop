@@ -192,46 +192,15 @@ describe('main/main.ts', () => {
       expect(manager.initialize).toHaveBeenCalled()
     })
 
-    it('應設定 onStart 回呼', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    it('回呼應在 initializeServices 中設定', async () => {
       const { initializeTray } = await import('../main')
 
       initializeTray()
 
-      // 檢查回呼已被設定
-      expect(mockTrayManagerInstance.onStart).not.toBeNull()
-
-      // 執行回呼
-      mockTrayManagerInstance.onStart?.()
-
-      expect(consoleSpy).toHaveBeenCalledWith('Timer start requested')
-      consoleSpy.mockRestore()
-    })
-
-    it('應設定 onPause 回呼', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-      const { initializeTray } = await import('../main')
-
-      initializeTray()
-
-      expect(mockTrayManagerInstance.onPause).not.toBeNull()
-      mockTrayManagerInstance.onPause?.()
-
-      expect(consoleSpy).toHaveBeenCalledWith('Timer pause requested')
-      consoleSpy.mockRestore()
-    })
-
-    it('應設定 onStop 回呼', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-      const { initializeTray } = await import('../main')
-
-      initializeTray()
-
-      expect(mockTrayManagerInstance.onStop).not.toBeNull()
-      mockTrayManagerInstance.onStop?.()
-
-      expect(consoleSpy).toHaveBeenCalledWith('Timer stop requested')
-      consoleSpy.mockRestore()
+      // initializeTray 不再設定回呼，回呼會在 initializeServices 中設定
+      expect(mockTrayManagerInstance.onStart).toBeNull()
+      expect(mockTrayManagerInstance.onPause).toBeNull()
+      expect(mockTrayManagerInstance.onStop).toBeNull()
     })
   })
 
@@ -386,6 +355,36 @@ describe('main/main.ts', () => {
       }).not.toThrow()
 
       expect(timerService).not.toBeNull()
+    })
+
+    it('onStateChange 回呼應安全執行', async () => {
+      const { initializeServices, getTimerService } = await import('../main')
+
+      initializeServices()
+
+      const timerService = getTimerService()
+
+      // 取得 setCallbacks 時設定的 onStateChange 回呼並執行
+      const callbacks = (timerService as any).callbacks
+
+      // 測試回呼可以安全執行（trayManager 為 null 時會安全跳過）
+      expect(() => {
+        callbacks?.onStateChange?.('idle', 'running')
+        callbacks?.onStateChange?.('running', 'idle')
+      }).not.toThrow()
+    })
+
+    it('當 trayManager 為 null 時回呼設定應安全跳過', async () => {
+      const { initializeServices } = await import('../main')
+
+      // 不呼叫 initializeTray()，trayManager 保持為 null
+      // initializeServices 應該安全執行，不會拋出錯誤
+      expect(() => initializeServices()).not.toThrow()
+
+      // 由於 trayManager 為 null，回呼不會被設定
+      expect(mockTrayManagerInstance.onStart).toBeNull()
+      expect(mockTrayManagerInstance.onPause).toBeNull()
+      expect(mockTrayManagerInstance.onStop).toBeNull()
     })
   })
 })

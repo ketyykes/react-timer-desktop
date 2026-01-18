@@ -37,6 +37,14 @@ const mockWindowInstance = {
   loadFile: vi.fn(),
   webContents: {
     openDevTools: vi.fn(),
+    session: {
+      webRequest: {
+        onHeadersReceived: vi.fn((callback) => {
+          // 模擬立即呼叫 callback 來測試 CSP 設定
+          callback({ responseHeaders: {} }, vi.fn())
+        }),
+      },
+    },
   },
 }
 

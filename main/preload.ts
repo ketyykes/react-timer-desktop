@@ -45,6 +45,11 @@ export const electronAPI = {
       ipcRenderer.on(IPC_CHANNELS.TIMER_COMPLETE, handler)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.TIMER_COMPLETE, handler)
     },
+    onStopFromTray: (callback: (data: TimerCompleteData) => void): (() => void) => {
+      const handler = (_event: IpcRendererEvent, data: TimerCompleteData) => callback(data)
+      ipcRenderer.on(IPC_CHANNELS.TIMER_STOP_FROM_TRAY, handler)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.TIMER_STOP_FROM_TRAY, handler)
+    },
   },
   // 任務相關 IPC
   task: {

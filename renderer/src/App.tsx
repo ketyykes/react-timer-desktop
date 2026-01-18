@@ -47,6 +47,24 @@ const App = () => {
     loadTasks()
   }, [loadTasks])
 
+  // 監聽從 Tray 選單停止計時器的事件
+  useEffect(() => {
+    const api = window.electronAPI?.timer
+    if (!api?.onStopFromTray) return
+
+    const unsubscribe = api.onStopFromTray((data) => {
+      // 與 handleTimerStop 相同的邏輯
+      setCompletedTask({
+        duration: data.duration,
+        actualTime: data.actualElapsed,
+        description: taskDescription,
+      })
+      setTaskDialogOpen(true)
+    })
+
+    return unsubscribe
+  }, [taskDescription])
+
   // 處理計時器停止（用戶按下停止按鈕時）
   const handleTimerStop = useCallback(
     (data: { duration: number; actualElapsed: number; mode: TimerMode }) => {

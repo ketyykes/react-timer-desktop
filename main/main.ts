@@ -1,3 +1,9 @@
+// 開發環境關閉 Electron 安全警告（Vite HMR 需要 unsafe-eval）
+// 生產環境打包後此警告不會顯示
+if (process.env.NODE_ENV === 'development') {
+  process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
+}
+
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 import { TrayManager } from './tray/TrayManager'
@@ -6,7 +12,7 @@ import { TimerIpcHandler } from './ipc/timerHandlers'
 import { TaskIpcHandler } from './ipc/taskHandlers'
 import { NotificationService } from './notification/NotificationService'
 import { TaskStore } from './store/TaskStore'
-import { formatTime } from '../shared/types'
+import { formatTime, IPC_CHANNELS } from '../shared/types'
 import { registerHistoryHandlers, unregisterHistoryHandlers } from './historyWindow'
 
 // 服務實例
@@ -81,23 +87,7 @@ export function createWindow(): BrowserWindow {
 export function initializeTray(): TrayManager {
   const manager = new TrayManager()
   manager.initialize()
-
-  // 設定事件回呼（後續 P3 實作計時器邏輯時使用）
-  manager.onStart = () => {
-    console.log('Timer start requested')
-    // TODO: P3 - 實作計時器啟動邏輯
-  }
-
-  manager.onPause = () => {
-    console.log('Timer pause requested')
-    // TODO: P3 - 實作計時器暫停邏輯
-  }
-
-  manager.onStop = () => {
-    console.log('Timer stop requested')
-    // TODO: P3 - 實作計時器停止邏輯
-  }
-
+  // 事件回呼會在 initializeServices() 中設定
   return manager
 }
 
@@ -148,6 +138,9 @@ export function getTaskStore(): TaskStore | null {
   return taskStore
 }
 
+// 預設計時時間（25 分鐘）
+const DEFAULT_TIMER_DURATION = 25 * 60 * 1000
+
 /**
  * 初始化計時器和通知服務
  */
@@ -163,7 +156,7 @@ export function initializeServices(): void {
     },
   })
 
-  // 設定計時器完成時的通知
+  // 設定計時器完成時的通知和狀態更新
   timerService.setCallbacks({
     onComplete: (duration, _actualElapsed, mode) => {
       notificationService?.showTimerComplete(duration, mode)
@@ -174,7 +167,58 @@ export function initializeServices(): void {
       const useCeil = data.mode === 'countdown'
       trayManager?.updateTitle(formatTime(data.displayTime, useCeil))
     },
+    onStateChange: (_previousState, currentState) => {
+      // 根據計時器狀態更新 Tray 選單
+      trayManager?.updateMenuForState(currentState)
+      // 當計時器停止或重置時，清除 Tray 標題
+      if (currentState === 'idle') {
+        trayManager?.updateTitle('')
+      }
+    },
   })
+
+  // 設定 Tray 選單的事件回呼
+  if (trayManager) {
+    trayManager.onStart = () => {
+      if (!timerService) return
+      const data = timerService.getData()
+      if (data.state === 'paused') {
+        // 暫停中則繼續
+        timerService.resume()
+      } else if (data.state === 'idle') {
+        // 閒置中則以預設時間開始正數計時
+        timerService.start(DEFAULT_TIMER_DURATION, 'countup')
+      }
+    }
+
+    trayManager.onPause = () => {
+      timerService?.pause()
+    }
+
+    trayManager.onStop = () => {
+      if (!timerService) return
+      const data = timerService.getData()
+      // 只有在計時中才處理
+      if (data.state === 'idle') return
+
+      // 取得計時資料
+      const stopData = {
+        duration: data.duration,
+        actualElapsed: data.elapsed,
+        mode: data.mode,
+      }
+
+      // 停止計時器
+      timerService.stop()
+
+      // 顯示視窗並發送事件給渲染程序打開 TaskDialog
+      trayManager?.showWindow()
+      const window = trayManager?.getWindow()
+      if (window && !window.isDestroyed()) {
+        window.webContents.send(IPC_CHANNELS.TIMER_STOP_FROM_TRAY, stopData)
+      }
+    }
+  }
 
   // 初始化 IPC 處理器
   timerIpcHandler = new TimerIpcHandler(timerService)

@@ -1,5 +1,48 @@
 {
   "enabledPlugins": {
-    "ralph-loop@claude-plugins-official": true
+    "ralph-loop@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git reset:*)",
+      "Bash(git checkout:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm test:coverage:*)",
+      "Bash(git status:*)",
+      "Bash(git merge:*)",
+      "Read(.claude/tasks/**)",
+      "Edit(.claude/tasks/**)",
+      "Write(.claude/tasks/**)",
+      "Bash(pnpm test:main:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(pnpm --filter renderer test:coverage)",
+      "Bash(pnpm dev:*)",
+      "Bash(pnpm approve-builds:*)",
+      "Bash(npx electron:*)",
+      "Bash(npm exec:*)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__get-library-docs",
+      "Bash(pnpm tsc:*)",
+      "mcp__ide__getDiagnostics",
+      "Skill(superpowers:brainstorming)",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Skill",
+      "Bash(pnpm run build:*)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
   }
 }

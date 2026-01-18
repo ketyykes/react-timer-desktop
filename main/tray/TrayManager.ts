@@ -86,10 +86,35 @@ export class TrayManager {
   }
 
   /**
+   * 設定 Content Security Policy
+   * 只在生產環境啟用，開發環境 Vite HMR 需要行內腳本
+   */
+  private setupContentSecurityPolicy(window: BrowserWindow): void {
+    // 開發環境不設定 CSP（Vite HMR 需要 inline script 和 eval）
+    if (process.env.NODE_ENV === 'development') {
+      return
+    }
+
+    const csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+
+    window.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [csp],
+        },
+      })
+    })
+  }
+
+  /**
    * 建立 BrowserWindow
    */
   private createWindow(): BrowserWindow {
     const window = new BrowserWindow(this.createWindowOptions())
+
+    // 設定 CSP（只在生產環境生效）
+    this.setupContentSecurityPolicy(window)
 
     // 載入渲染程序
     if (process.env.NODE_ENV === 'development') {
@@ -111,13 +136,22 @@ export class TrayManager {
   }
 
   /**
+   * 初始化選單項目設定（只呼叫一次）
+   */
+  private initializeMenuItems(): void {
+    if (this.menuItems.size === 0) {
+      this.menuItems.set('start', { id: 'start', label: '開始計時', enabled: true })
+      this.menuItems.set('pause', { id: 'pause', label: '暫停', enabled: false })
+      this.menuItems.set('stop', { id: 'stop', label: '停止', enabled: false })
+    }
+  }
+
+  /**
    * 建立右鍵選單模板
    */
   private createMenuTemplate(): MenuItemConstructorOptions[] {
-    // 初始化選單項目設定
-    this.menuItems.set('start', { id: 'start', label: '開始計時', enabled: true })
-    this.menuItems.set('pause', { id: 'pause', label: '暫停', enabled: false })
-    this.menuItems.set('stop', { id: 'stop', label: '停止', enabled: false })
+    // 確保選單項目已初始化
+    this.initializeMenuItems()
 
     return [
       {

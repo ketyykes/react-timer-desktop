@@ -19,6 +19,28 @@ function isDevelopment(): boolean {
 }
 
 /**
+ * 設定 Content Security Policy
+ * 只在生產環境啟用，開發環境 Vite HMR 需要行內腳本
+ */
+function setupContentSecurityPolicy(window: BrowserWindow): void {
+  // 開發環境不設定 CSP（Vite HMR 需要 inline script 和 eval）
+  if (isDevelopment()) {
+    return
+  }
+
+  const csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+
+  window.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [csp],
+      },
+    })
+  })
+}
+
+/**
  * 建立歷史記錄視窗
  * 如果視窗已存在且未銷毀，則 focus 現有視窗
  */
@@ -39,6 +61,9 @@ export function createHistoryWindow(): BrowserWindow {
       nodeIntegration: false,
     },
   })
+
+  // 設定 CSP
+  setupContentSecurityPolicy(historyWindow)
 
   // 開發模式載入 Vite dev server，生產模式載入打包後的檔案
   if (isDevelopment()) {

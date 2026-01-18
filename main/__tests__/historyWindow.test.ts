@@ -10,6 +10,15 @@ vi.mock('electron', () => {
     on: vi.fn(),
     focus: vi.fn(),
     isDestroyed: vi.fn(() => false),
+    webContents: {
+      session: {
+        webRequest: {
+          onHeadersReceived: vi.fn((callback) => {
+            callback({ responseHeaders: {} }, vi.fn())
+          }),
+        },
+      },
+    },
   }
 
   return {
@@ -73,6 +82,17 @@ describe('historyWindow', () => {
     it('如果視窗已被銷毀應該建立新的視窗', async () => {
       vi.resetModules()
 
+      // 建立 webContents mock 的輔助函式
+      const createWebContentsMock = () => ({
+        session: {
+          webRequest: {
+            onHeadersReceived: vi.fn((callback) => {
+              callback({ responseHeaders: {} }, vi.fn())
+            }),
+          },
+        },
+      })
+
       // 第一次呼叫：視窗未銷毀
       const mockWindow1 = {
         loadFile: vi.fn(),
@@ -81,6 +101,7 @@ describe('historyWindow', () => {
         on: vi.fn(),
         focus: vi.fn(),
         isDestroyed: vi.fn(() => false),
+        webContents: createWebContentsMock(),
       }
 
       // 第二次呼叫：視窗已銷毀，應建立新視窗
@@ -91,6 +112,7 @@ describe('historyWindow', () => {
         on: vi.fn(),
         focus: vi.fn(),
         isDestroyed: vi.fn(() => false),
+        webContents: createWebContentsMock(),
       }
 
       let callCount = 0

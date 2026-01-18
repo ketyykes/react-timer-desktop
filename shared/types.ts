@@ -61,6 +61,7 @@ export const IPC_CHANNELS = {
   TIMER_TICK: 'timer:tick',
   TIMER_STATE_CHANGE: 'timer:stateChange',
   TIMER_COMPLETE: 'timer:complete',
+  TIMER_STOP_FROM_TRAY: 'timer:stopFromTray',
 
   // 任務記錄
   TASK_SAVE: 'task:save',

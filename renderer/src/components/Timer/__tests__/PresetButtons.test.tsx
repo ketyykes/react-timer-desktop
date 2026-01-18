@@ -64,4 +64,20 @@ describe('PresetButtons', () => {
       })
     })
   })
+
+  describe('佈局樣式', () => {
+    it('應該使用 grid-cols-4 佈局一行排列', () => {
+      render(<PresetButtons onSelect={vi.fn()} disabled={false} />)
+      const container = screen.getByRole('group')
+      expect(container).toHaveClass('grid-cols-4')
+    })
+
+    it('按鈕應該使用 size="sm"', () => {
+      render(<PresetButtons onSelect={vi.fn()} disabled={false} />)
+      const buttons = screen.getAllByRole('button')
+      buttons.forEach((button) => {
+        expect(button).toHaveClass('h-8') // sm size
+      })
+    })
+  })
 })

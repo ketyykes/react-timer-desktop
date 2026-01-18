@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,8 @@ export interface TaskDialogProps {
   duration: number
   /** 實際計時時間（毫秒） */
   actualTime: number
+  /** 預填的任務名稱 */
+  defaultName?: string
   /** 確認儲存 */
   onConfirm: (name: string) => void
   /** 取消/跳過 */
@@ -32,10 +34,17 @@ export function TaskDialog({
   open,
   duration,
   actualTime,
+  defaultName,
   onConfirm,
   onCancel,
 }: TaskDialogProps) {
-  const [taskName, setTaskName] = useState('')
+  const [taskName, setTaskName] = useState(defaultName ?? '')
+
+  useEffect(() => {
+    if (open) {
+      setTaskName(defaultName ?? '')
+    }
+  }, [open, defaultName])
 
   const handleConfirm = useCallback(() => {
     onConfirm(taskName)

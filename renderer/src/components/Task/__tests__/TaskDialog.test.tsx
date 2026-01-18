@@ -107,4 +107,22 @@ describe('TaskDialog', () => {
       expect(screen.getByText('實際時間：01:05')).toBeInTheDocument()
     })
   })
+
+  describe('預填名稱功能', () => {
+    it('應使用 defaultName 預填輸入框', () => {
+      render(<TaskDialog {...defaultProps} defaultName="寫報告" />)
+      expect(screen.getByDisplayValue('寫報告')).toBeInTheDocument()
+    })
+
+    it('defaultName 為空時輸入框應為空', () => {
+      render(<TaskDialog {...defaultProps} defaultName="" />)
+      expect(screen.getByPlaceholderText('輸入任務名稱（選填）')).toHaveValue('')
+    })
+
+    it('重新開啟時應重置為新的 defaultName', () => {
+      const { rerender } = render(<TaskDialog {...defaultProps} open={false} defaultName="任務A" />)
+      rerender(<TaskDialog {...defaultProps} open={true} defaultName="任務B" />)
+      expect(screen.getByDisplayValue('任務B')).toBeInTheDocument()
+    })
+  })
 })

@@ -39,8 +39,8 @@ const App = () => {
     }
   }, [activeTab, loadTasks])
 
-  // 處理計時完成
-  const handleTimerComplete = useCallback(
+  // 處理計時器停止（用戶按下停止按鈕時）
+  const handleTimerStop = useCallback(
     (data: { duration: number; actualElapsed: number; mode: TimerMode }) => {
       setCompletedTask({
         duration: data.duration,
@@ -108,7 +108,7 @@ const App = () => {
             <Timer
               taskDescription={taskDescription}
               onTaskDescriptionChange={setTaskDescription}
-              onComplete={handleTimerComplete}
+              onStop={handleTimerStop}
             />
           </div>
         </TabsContent>

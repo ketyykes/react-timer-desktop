@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../App'
-import type { TimerMode, TaskRecord } from '../../../shared/types'
+import type { TimerMode, TaskRecord, TimerData } from '../../../shared/types'
 
 // Mock Electron API
 const mockStart = vi.fn()
@@ -120,22 +120,47 @@ describe('App', () => {
   })
 
   describe('TaskDialog 整合', () => {
-    it('計時完成時應顯示 TaskDialog', async () => {
-      let completeCallback: ((data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) | null = null
-      mockOnComplete.mockImplementation((callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => {
-        completeCallback = callback
+    it('點擊停止按鈕時應顯示 TaskDialog', async () => {
+      let tickCallback: ((data: TimerData) => void) | null = null
+      mockOnTick.mockImplementation((callback: (data: TimerData) => void) => {
+        tickCallback = callback
         return vi.fn()
       })
 
+      const mockStopData: TimerData = {
+        state: 'idle',
+        mode: 'countdown',
+        duration: 0,
+        remaining: 0,
+        elapsed: 0,
+        isOvertime: false,
+        displayTime: 0,
+      }
+      mockStop.mockResolvedValue(mockStopData)
+
       render(<App />)
 
-      // 模擬計時完成
+      // 模擬運行中狀態
+      const runningData: TimerData = {
+        state: 'running',
+        mode: 'countdown',
+        duration: 300000,
+        remaining: 295000,
+        elapsed: 5000,
+        isOvertime: false,
+        displayTime: 295000,
+      }
+
       await act(async () => {
-        completeCallback?.({
-          duration: 300000,
-          actualElapsed: 305000,
-          mode: 'countdown',
-        })
+        tickCallback?.(runningData)
+      })
+
+      // 點擊停止按鈕
+      const stopButton = screen.getByRole('button', { name: /停止/i })
+      await userEvent.click(stopButton)
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
       expect(screen.getByRole('dialog')).toBeInTheDocument()
@@ -143,22 +168,44 @@ describe('App', () => {
     })
 
     it('儲存任務後應關閉對話框', async () => {
-      let completeCallback: ((data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) | null = null
-      mockOnComplete.mockImplementation((callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => {
-        completeCallback = callback
+      let tickCallback: ((data: TimerData) => void) | null = null
+      mockOnTick.mockImplementation((callback: (data: TimerData) => void) => {
+        tickCallback = callback
         return vi.fn()
       })
+
+      const mockStopData: TimerData = {
+        state: 'idle',
+        mode: 'countdown',
+        duration: 0,
+        remaining: 0,
+        elapsed: 0,
+        isOvertime: false,
+        displayTime: 0,
+      }
+      mockStop.mockResolvedValue(mockStopData)
       mockTaskSave.mockResolvedValue(undefined)
 
       render(<App />)
 
-      // 模擬計時完成
+      // 模擬運行中狀態
       await act(async () => {
-        completeCallback?.({
-          duration: 300000,
-          actualElapsed: 305000,
+        tickCallback?.({
+          state: 'running',
           mode: 'countdown',
+          duration: 300000,
+          remaining: 295000,
+          elapsed: 5000,
+          isOvertime: false,
+          displayTime: 295000,
         })
+      })
+
+      // 點擊停止按鈕
+      await userEvent.click(screen.getByRole('button', { name: /停止/i }))
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
       // 點擊儲存
@@ -174,21 +221,43 @@ describe('App', () => {
     })
 
     it('跳過時應關閉對話框但不儲存', async () => {
-      let completeCallback: ((data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) | null = null
-      mockOnComplete.mockImplementation((callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => {
-        completeCallback = callback
+      let tickCallback: ((data: TimerData) => void) | null = null
+      mockOnTick.mockImplementation((callback: (data: TimerData) => void) => {
+        tickCallback = callback
         return vi.fn()
       })
 
+      const mockStopData: TimerData = {
+        state: 'idle',
+        mode: 'countdown',
+        duration: 0,
+        remaining: 0,
+        elapsed: 0,
+        isOvertime: false,
+        displayTime: 0,
+      }
+      mockStop.mockResolvedValue(mockStopData)
+
       render(<App />)
 
-      // 模擬計時完成
+      // 模擬運行中狀態
       await act(async () => {
-        completeCallback?.({
-          duration: 300000,
-          actualElapsed: 305000,
+        tickCallback?.({
+          state: 'running',
           mode: 'countdown',
+          duration: 300000,
+          remaining: 295000,
+          elapsed: 5000,
+          isOvertime: false,
+          displayTime: 295000,
         })
+      })
+
+      // 點擊停止按鈕
+      await userEvent.click(screen.getByRole('button', { name: /停止/i }))
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
       // 點擊跳過
@@ -204,11 +273,22 @@ describe('App', () => {
     })
 
     it('對話框應預填任務描述', async () => {
-      let completeCallback: ((data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) | null = null
-      mockOnComplete.mockImplementation((callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => {
-        completeCallback = callback
+      let tickCallback: ((data: TimerData) => void) | null = null
+      mockOnTick.mockImplementation((callback: (data: TimerData) => void) => {
+        tickCallback = callback
         return vi.fn()
       })
+
+      const mockStopData: TimerData = {
+        state: 'idle',
+        mode: 'countdown',
+        duration: 0,
+        remaining: 0,
+        elapsed: 0,
+        isOvertime: false,
+        displayTime: 0,
+      }
+      mockStop.mockResolvedValue(mockStopData)
 
       render(<App />)
 
@@ -216,13 +296,24 @@ describe('App', () => {
       const descInput = screen.getByPlaceholderText('這次要做什麼？（選填）')
       await userEvent.type(descInput, '我的測試任務')
 
-      // 模擬計時完成
+      // 模擬運行中狀態
       await act(async () => {
-        completeCallback?.({
-          duration: 300000,
-          actualElapsed: 305000,
+        tickCallback?.({
+          state: 'running',
           mode: 'countdown',
+          duration: 300000,
+          remaining: 295000,
+          elapsed: 5000,
+          isOvertime: false,
+          displayTime: 295000,
         })
+      })
+
+      // 點擊停止按鈕
+      await userEvent.click(screen.getByRole('button', { name: /停止/i }))
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
       // 對話框應有預填值

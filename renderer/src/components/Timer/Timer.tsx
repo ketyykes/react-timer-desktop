@@ -17,18 +17,20 @@ export interface TimerProps {
   taskDescription: string
   /** 任務描述變更回調 */
   onTaskDescriptionChange: (value: string) => void
-  /** 計時完成回調 */
-  onComplete: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void
+  /** 停止計時回調（用戶按下停止按鈕時觸發） */
+  onStop: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void
 }
 
 /**
  * 計時器主元件
  * 整合時間顯示、控制按鈕、時間輸入和預設時間選擇
  */
-export function Timer({ taskDescription, onTaskDescriptionChange, onComplete }: TimerProps) {
+export function Timer({ taskDescription, onTaskDescriptionChange, onStop }: TimerProps) {
   const {
     state,
     mode,
+    duration,
+    elapsed,
     displayTime,
     isOvertime,
     start,
@@ -36,7 +38,6 @@ export function Timer({ taskDescription, onTaskDescriptionChange, onComplete }: 
     resume,
     stop,
     reset,
-    subscribeComplete,
   } = useTimer()
 
   // 時間輸入狀態
@@ -50,13 +51,19 @@ export function Timer({ taskDescription, onTaskDescriptionChange, onComplete }: 
   const isIdle = state === 'idle'
   const isActive = state !== 'idle'
 
-  // 訂閱計時完成事件
-  useEffect(() => {
-    const cleanup = subscribeComplete((data) => {
-      onComplete(data)
-    })
-    return cleanup
-  }, [subscribeComplete, onComplete])
+  // 處理停止按鈕點擊
+  const handleStop = useCallback(async () => {
+    // 先取得當前計時資料
+    const stopData = {
+      duration,
+      actualElapsed: elapsed,
+      mode,
+    }
+    // 停止計時器
+    await stop()
+    // 通知父元件
+    onStop(stopData)
+  }, [duration, elapsed, mode, stop, onStop])
 
   // 啟動計時器的共用邏輯
   const startTimer = useCallback(async (ms: number) => {
@@ -143,7 +150,7 @@ export function Timer({ taskDescription, onTaskDescriptionChange, onComplete }: 
           state={state}
           onPause={pause}
           onResume={resume}
-          onStop={stop}
+          onStop={handleStop}
           onReset={reset}
         />
       )}

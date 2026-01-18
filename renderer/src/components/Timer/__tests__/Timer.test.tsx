@@ -29,7 +29,7 @@ const mockTimerAPI = {
 const defaultProps: TimerProps = {
   taskDescription: '',
   onTaskDescriptionChange: vi.fn(),
-  onComplete: vi.fn(),
+  onStop: vi.fn(),
 }
 
 describe('Timer', () => {
@@ -212,39 +212,54 @@ describe('Timer', () => {
     })
   })
 
-  describe('完成回調功能', () => {
-    it('計時完成時應呼叫 onComplete', async () => {
-      const onComplete = vi.fn()
-      let completeCallback: ((data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) | null = null
+  describe('停止回調功能', () => {
+    it('點擊停止按鈕時應呼叫 onStop', async () => {
+      const onStop = vi.fn()
+      let tickCallback: ((data: TimerData) => void) | null = null
 
-      mockOnComplete.mockImplementation((callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => {
-        completeCallback = callback
+      mockOnTick.mockImplementation((callback: (data: TimerData) => void) => {
+        tickCallback = callback
         return vi.fn()
       })
 
-      render(<Timer {...defaultProps} onComplete={onComplete} />)
+      const mockStopData: TimerData = {
+        state: 'idle',
+        mode: 'countdown',
+        duration: 0,
+        remaining: 0,
+        elapsed: 0,
+        isOvertime: false,
+        displayTime: 0,
+      }
+      mockStop.mockResolvedValue(mockStopData)
 
-      const completeData = {
+      render(<Timer {...defaultProps} onStop={onStop} />)
+
+      // 模擬運行中狀態
+      const runningData: TimerData = {
+        state: 'running',
+        mode: 'countdown',
         duration: 300000,
-        actualElapsed: 305000,
-        mode: 'countdown' as TimerMode,
+        remaining: 295000,
+        elapsed: 5000,
+        isOvertime: false,
+        displayTime: 295000,
       }
 
       await act(async () => {
-        completeCallback?.(completeData)
+        tickCallback?.(runningData)
       })
 
-      expect(onComplete).toHaveBeenCalledWith(completeData)
-    })
+      // 點擊停止按鈕
+      const stopButton = screen.getByRole('button', { name: /停止/i })
+      await userEvent.click(stopButton)
 
-    it('unmount 時應清理 subscribeComplete 訂閱', () => {
-      const cleanup = vi.fn()
-      mockOnComplete.mockReturnValue(cleanup)
-
-      const { unmount } = render(<Timer {...defaultProps} />)
-      unmount()
-
-      expect(cleanup).toHaveBeenCalled()
+      expect(mockStop).toHaveBeenCalled()
+      expect(onStop).toHaveBeenCalledWith({
+        duration: 300000,
+        actualElapsed: 5000,
+        mode: 'countdown',
+      })
     })
   })
 })

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { TimerState, TimerMode, TimerData } from '../../../shared/types'
+import type { TimerState, TimerMode, TimerData, TaskRecord } from '../../../shared/types'
 
 /**
  * useTimer hook 回傳型別
@@ -34,7 +34,7 @@ export interface UseTimerReturn {
 }
 
 /**
- * Electron API 型別定義
+ * Electron Timer API 型別定義
  */
 interface ElectronTimerAPI {
   start: (duration: number, mode?: TimerMode) => Promise<TimerData>
@@ -47,10 +47,29 @@ interface ElectronTimerAPI {
   onComplete: (callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => () => void
 }
 
+/**
+ * Electron Task API 型別定義
+ */
+interface ElectronTaskAPI {
+  save: (task: Omit<TaskRecord, 'id' | 'createdAt'>) => Promise<TaskRecord>
+  getAll: () => Promise<TaskRecord[]>
+  delete: (id: string) => Promise<void>
+  update: (data: { id: string; name: string }) => Promise<TaskRecord>
+}
+
+/**
+ * Electron History API 型別定義
+ */
+interface ElectronHistoryAPI {
+  open: () => void
+}
+
 declare global {
   interface Window {
     electronAPI?: {
       timer: ElectronTimerAPI
+      task: ElectronTaskAPI
+      history: ElectronHistoryAPI
     }
   }
 }

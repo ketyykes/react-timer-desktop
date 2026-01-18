@@ -83,13 +83,15 @@ export class TrayManager {
     }
 
     // macOS: 使用原生毛玻璃效果
+    // 參考: https://www.electronjs.org/docs/latest/api/browser-window#new-browserwindowoptions
     if (process.platform === 'darwin') {
       return {
         ...baseOptions,
         transparent: true,
         vibrancy: 'popover',
         visualEffectState: 'active',
-        backgroundColor: '#00000000',
+        backgroundColor: undefined, // 讓 vibrancy 完全控制背景
+        hasShadow: true,
       }
     }
 

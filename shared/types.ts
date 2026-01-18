@@ -66,6 +66,7 @@ export const IPC_CHANNELS = {
   TASK_SAVE: 'task:save',
   TASK_GET_ALL: 'task:getAll',
   TASK_DELETE: 'task:delete',
+  TASK_UPDATE: 'task:update',
 } as const
 
 /**

@@ -52,6 +52,8 @@ export const electronAPI = {
       ipcRenderer.invoke(IPC_CHANNELS.TASK_SAVE, task),
     getAll: (): Promise<TaskRecord[]> => ipcRenderer.invoke(IPC_CHANNELS.TASK_GET_ALL),
     delete: (id: string): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.TASK_DELETE, id),
+    update: (data: { id: string; name: string }): Promise<TaskRecord> =>
+      ipcRenderer.invoke(IPC_CHANNELS.TASK_UPDATE, data),
   },
   // 版本資訊
   versions: {

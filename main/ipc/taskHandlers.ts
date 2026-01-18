@@ -31,6 +31,13 @@ export class TaskIpcHandler {
     ipcMain.handle(IPC_CHANNELS.TASK_DELETE, (_event, id: string) => {
       return this.taskStore.delete(id)
     })
+
+    ipcMain.handle(
+      IPC_CHANNELS.TASK_UPDATE,
+      (_event, data: { id: string; name: string }) => {
+        return this.taskStore.update(data.id, { name: data.name })
+      }
+    )
   }
 
   /**
@@ -40,6 +47,7 @@ export class TaskIpcHandler {
     ipcMain.removeHandler(IPC_CHANNELS.TASK_SAVE)
     ipcMain.removeHandler(IPC_CHANNELS.TASK_GET_ALL)
     ipcMain.removeHandler(IPC_CHANNELS.TASK_DELETE)
+    ipcMain.removeHandler(IPC_CHANNELS.TASK_UPDATE)
   }
 
   /**

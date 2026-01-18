@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Timer, type TimerProps } from '../Timer'
-import type { TimerData, TimerMode } from '../../../../../shared/types'
+import type { TimerData } from '../../../../../shared/types'
 
 // Mock Electron API
 const mockStart = vi.fn()

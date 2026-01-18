@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState } from 'react'
 import { useTimer } from '@/hooks/useTimer'
 import { parseTime, type TimerMode } from '../../../../shared/types'
 import { TimerDisplay } from './TimerDisplay'

@@ -85,7 +85,7 @@ export function TodayTasks({ tasks, onUpdate, onDelete, onViewAll }: TodayTasksP
             <li
               key={task.id}
               data-testid="today-task-item"
-              className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted/50 text-sm"
+              className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-white/50 text-sm"
             >
               {deletingId === task.id ? (
                 // 刪除確認狀態

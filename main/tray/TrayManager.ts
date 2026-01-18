@@ -67,21 +67,37 @@ export class TrayManager {
    * 建立視窗設定
    */
   private createWindowOptions(): Electron.BrowserWindowConstructorOptions {
-    return {
+    const baseOptions: Electron.BrowserWindowConstructorOptions = {
       width: 400,
-      height: 300,
+      height: 340,
       show: false,
       frame: false,
       resizable: false,
       skipTaskbar: true,
       alwaysOnTop: true,
-      transparent: false,
-      backgroundColor: '#ffffff',
       webPreferences: {
         preload: path.join(__dirname, '..', 'preload', 'preload.js'),
         contextIsolation: true,
         nodeIntegration: false,
       },
+    }
+
+    // macOS: 使用原生毛玻璃效果
+    if (process.platform === 'darwin') {
+      return {
+        ...baseOptions,
+        transparent: true,
+        vibrancy: 'popover',
+        visualEffectState: 'active',
+        backgroundColor: '#00000000',
+      }
+    }
+
+    // 其他平台: 使用純色背景
+    return {
+      ...baseOptions,
+      transparent: false,
+      backgroundColor: '#ffffff',
     }
   }
 

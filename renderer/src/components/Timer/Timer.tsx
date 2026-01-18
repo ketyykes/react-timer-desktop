@@ -104,7 +104,7 @@ export function Timer({ taskDescription, onTaskDescriptionChange, onStop }: Time
   const timeToDisplay = isIdle ? pendingTime : displayTime
 
   return (
-    <div className="flex flex-col items-center justify-center gap-6 text-center">
+    <div className="flex flex-col items-center justify-center gap-4 text-center">
       <TimerDisplay
         displayTime={timeToDisplay}
         isOvertime={isOvertime}
@@ -114,7 +114,7 @@ export function Timer({ taskDescription, onTaskDescriptionChange, onStop }: Time
       />
 
       {isIdle && (
-        <div className="flex flex-col items-center gap-4 w-full">
+        <div className="flex flex-col items-center gap-3 w-full">
           <TaskDescriptionInput
             value={taskDescription}
             onChange={onTaskDescriptionChange}
@@ -151,7 +151,7 @@ export function Timer({ taskDescription, onTaskDescriptionChange, onStop }: Time
       )}
 
       {!isIdle && (
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-3">
           {taskDescription && (
             <p className="text-sm text-gray-600">「{taskDescription}」</p>
           )}

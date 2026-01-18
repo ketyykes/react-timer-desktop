@@ -136,9 +136,9 @@ const App = () => {
   }, [])
 
   return (
-    <div className="h-full bg-white flex flex-col">
+    <div className="h-full glass-container flex flex-col rounded-xl overflow-hidden">
       {/* 計時器區塊 (75%) */}
-      <div className="flex-[3] flex items-center justify-center p-4">
+      <div className="flex-[3] flex items-center justify-center p-3">
         <div className="w-full max-w-xs">
           <Timer
             taskDescription={taskDescription}
@@ -149,10 +149,10 @@ const App = () => {
       </div>
 
       {/* 分隔線 */}
-      <div className="border-t border-gray-200" />
+      <div className="border-t glass-divider" />
 
       {/* 今日記錄區塊 (25%) */}
-      <div className="flex-1 p-3 bg-gray-50/50">
+      <div className="flex-1 p-3 glass-section">
         <TodayTasks
           tasks={tasks}
           onUpdate={handleTaskUpdate}

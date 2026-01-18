@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../App'
-import type { TimerMode, TaskRecord, TimerData } from '../../../shared/types'
+import type { TaskRecord, TimerData } from '../../../shared/types'
 
 // Mock Electron API
 const mockStart = vi.fn()

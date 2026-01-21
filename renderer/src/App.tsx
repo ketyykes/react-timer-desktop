@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Timer } from '@/components/Timer'
 import { TaskDialog } from '@/components/Task/TaskDialog'
 import { TodayTasks } from '@/components/Task/TodayTasks'
+import { PinButton } from '@/components/ui/pin-button'
 import type { TaskRecord, TimerMode } from '../../shared/types'
 
 /**
@@ -31,6 +32,40 @@ const App = () => {
 
   // 任務描述（傳給 Timer）
   const [taskDescription, setTaskDescription] = useState('')
+
+  // 視窗模式狀態
+  const [isPinned, setIsPinned] = useState(false)
+
+  // 載入初始視窗模式
+  useEffect(() => {
+    const api = window.electronAPI?.window
+    if (api?.getMode) {
+      api.getMode().then((mode) => {
+        setIsPinned(mode === 'floating')
+      })
+    }
+  }, [])
+
+  // 監聽視窗模式變更
+  useEffect(() => {
+    const api = window.electronAPI?.window
+    if (!api?.onModeChange) return
+
+    const unsubscribe = api.onModeChange((mode) => {
+      setIsPinned(mode === 'floating')
+    })
+
+    return unsubscribe
+  }, [])
+
+  // 處理釘選切換
+  const handlePinToggle = useCallback(async () => {
+    const api = window.electronAPI?.window
+    if (api?.togglePin) {
+      const newMode = await api.togglePin()
+      setIsPinned(newMode === 'floating')
+    }
+  }, [])
 
   // 載入今日任務
   const loadTasks = useCallback(async () => {
@@ -137,8 +172,13 @@ const App = () => {
 
   return (
     <div className="h-full glass-container flex flex-col rounded-xl overflow-hidden">
+      {/* 標題列 */}
+      <div className="flex justify-end p-2">
+        <PinButton isPinned={isPinned} onClick={handlePinToggle} />
+      </div>
+
       {/* 計時器區塊 (75%) */}
-      <div className="flex-[3] flex items-center justify-center p-3">
+      <div className="flex-[3] flex items-center justify-center p-3 pt-0">
         <div className="w-full max-w-xs">
           <Timer
             taskDescription={taskDescription}

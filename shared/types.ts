@@ -49,6 +49,19 @@ export interface TaskRecord {
 /**
  * IPC Channel 名稱
  */
+/**
+ * 視窗模式
+ */
+export type WindowMode = 'popover' | 'floating'
+
+/**
+ * 視窗設定
+ */
+export interface WindowSettings {
+  mode: WindowMode
+  floatingPosition: { x: number; y: number } | null
+}
+
 export const IPC_CHANNELS = {
   // 渲染程序 → 主程序（命令）
   TIMER_START: 'timer:start',
@@ -71,6 +84,11 @@ export const IPC_CHANNELS = {
 
   // 歷史記錄視窗
   HISTORY_OPEN: 'history:open',
+
+  // 視窗控制
+  WINDOW_PIN: 'window:pin',
+  WINDOW_MODE_CHANGE: 'window:modeChange',
+  WINDOW_GET_MODE: 'window:getMode',
 } as const
 
 /**

@@ -12,6 +12,8 @@ import { TimerIpcHandler } from './ipc/timerHandlers'
 import { TaskIpcHandler } from './ipc/taskHandlers'
 import { NotificationService } from './notification/NotificationService'
 import { TaskStore } from './store/TaskStore'
+import { DockManager } from './dock/DockManager'
+import { WindowSettingsStore } from './store/WindowSettingsStore'
 import { formatTime, IPC_CHANNELS } from '../shared/types'
 import { registerHistoryHandlers, unregisterHistoryHandlers } from './historyWindow'
 
@@ -22,6 +24,8 @@ let timerIpcHandler: TimerIpcHandler | null = null
 let taskIpcHandler: TaskIpcHandler | null = null
 let notificationService: NotificationService | null = null
 let taskStore: TaskStore | null = null
+let dockManager: DockManager | null = null
+let windowSettingsStore: WindowSettingsStore | null = null
 
 /**
  * 取得 preload script 路徑
@@ -95,8 +99,8 @@ export function initializeTray(): TrayManager {
  * 處理 macOS activate 事件
  */
 export function handleActivate(): void {
-  // 對於 Tray 應用，不需要重新建立視窗
-  // 使用者點擊 Tray 圖示即可開啟視窗
+  // Dock 點擊時顯示視窗
+  trayManager?.showWindow()
 }
 
 /**
@@ -145,6 +149,20 @@ const DEFAULT_TIMER_DURATION = 25 * 60 * 1000
  * 初始化計時器和通知服務
  */
 export function initializeServices(): void {
+  // 初始化視窗設定儲存
+  windowSettingsStore = new WindowSettingsStore()
+
+  // 連接設定儲存到 TrayManager
+  if (trayManager && windowSettingsStore) {
+    trayManager.setSettingsStore(windowSettingsStore)
+  }
+
+  // 初始化 Dock 管理器（僅 macOS）
+  if (process.platform === 'darwin') {
+    dockManager = new DockManager()
+    dockManager.initialize()
+  }
+
   // 初始化計時器服務
   timerService = new TimerService()
 
@@ -166,13 +184,22 @@ export function initializeServices(): void {
       // countdown 用 ceil（確保剩餘時間不低估），countup 用 floor（確保經過時間不高估）
       const useCeil = data.mode === 'countdown'
       trayManager?.updateTitle(formatTime(data.displayTime, useCeil))
+
+      // 更新 Dock badge
+      if (dockManager) {
+        const overtime = data.isOvertime ? Math.abs(data.remaining) : 0
+        dockManager.updateBadge(data.state, data.remaining, overtime)
+      }
     },
     onStateChange: (_previousState, currentState) => {
       // 根據計時器狀態更新 Tray 選單
       trayManager?.updateMenuForState(currentState)
-      // 當計時器停止或重置時，清除 Tray 標題
+      dockManager?.updateMenuForState(currentState)
+
+      // 當計時器停止或重置時，清除 Tray 標題和 Dock badge
       if (currentState === 'idle') {
         trayManager?.updateTitle('')
+        dockManager?.clearBadge()
       }
     },
   })
@@ -218,6 +245,13 @@ export function initializeServices(): void {
         window.webContents.send(IPC_CHANNELS.TIMER_STOP_FROM_TRAY, stopData)
       }
     }
+  }
+
+  // 設定 Dock 選單回呼（與 Tray 同步）
+  if (dockManager) {
+    dockManager.onStart = () => trayManager?.onStart?.()
+    dockManager.onPause = () => trayManager?.onPause?.()
+    dockManager.onStop = () => trayManager?.onStop?.()
   }
 
   // 初始化 IPC 處理器
@@ -270,6 +304,8 @@ export function initializeApp(): void {
     taskIpcHandler = null
     notificationService = null
     taskStore = null
+    dockManager = null
+    windowSettingsStore = null
   })
 }
 

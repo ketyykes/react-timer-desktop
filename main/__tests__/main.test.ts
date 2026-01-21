@@ -13,6 +13,8 @@ const mockTrayManagerInstance = {
   getWindow: vi.fn(() => mockWindow),
   showWindow: vi.fn(),
   updateTitle: vi.fn(),
+  updateMenuForState: vi.fn(),
+  setSettingsStore: vi.fn(),
   onStart: null as (() => void) | null,
   onPause: null as (() => void) | null,
   onStop: null as (() => void) | null,
@@ -30,6 +32,32 @@ vi.mock('../store/TaskStore', () => ({
     delete: vi.fn(),
     clear: vi.fn(),
   })),
+}))
+
+// Mock WindowSettingsStore
+vi.mock('../store/WindowSettingsStore', () => ({
+  WindowSettingsStore: vi.fn().mockImplementation(() => ({
+    getMode: vi.fn(() => 'popover'),
+    setMode: vi.fn(),
+    getFloatingPosition: vi.fn(() => null),
+    setFloatingPosition: vi.fn(),
+    getAll: vi.fn(() => ({ mode: 'popover', floatingPosition: null })),
+  })),
+}))
+
+// Mock DockManager
+const mockDockManagerInstance = {
+  initialize: vi.fn(),
+  updateBadge: vi.fn(),
+  clearBadge: vi.fn(),
+  updateMenuForState: vi.fn(),
+  onStart: null as (() => void) | null,
+  onPause: null as (() => void) | null,
+  onStop: null as (() => void) | null,
+}
+
+vi.mock('../dock/DockManager', () => ({
+  DockManager: vi.fn().mockImplementation(() => mockDockManagerInstance),
 }))
 
 // Mock Electron modules
@@ -91,6 +119,9 @@ describe('main/main.ts', () => {
     mockTrayManagerInstance.onStart = null
     mockTrayManagerInstance.onPause = null
     mockTrayManagerInstance.onStop = null
+    mockDockManagerInstance.onStart = null
+    mockDockManagerInstance.onPause = null
+    mockDockManagerInstance.onStop = null
   })
 
   afterEach(() => {

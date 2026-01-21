@@ -517,4 +517,27 @@ describe('TrayManager', () => {
       expect(mockOnStop).toHaveBeenCalled()
     })
   })
+
+  describe('floating mode', () => {
+    it('togglePinned switches between popover and floating', async () => {
+      const { TrayManager } = await import('../TrayManager')
+      const manager = new TrayManager()
+      manager.initialize()
+      expect(manager.getWindowMode()).toBe('popover')
+
+      manager.togglePinned()
+      expect(manager.getWindowMode()).toBe('floating')
+
+      manager.togglePinned()
+      expect(manager.getWindowMode()).toBe('popover')
+    })
+
+    it('getWindowMode returns current mode', async () => {
+      const { TrayManager } = await import('../TrayManager')
+      const manager = new TrayManager()
+      manager.initialize()
+
+      expect(manager.getWindowMode()).toBe('popover')
+    })
+  })
 })

@@ -1,6 +1,7 @@
 import { Tray, Menu, nativeImage, BrowserWindow, app, screen, MenuItemConstructorOptions } from 'electron'
 import path from 'node:path'
-import type { TimerState } from '../../shared/types'
+import type { TimerState, WindowMode } from '../../shared/types'
+import type { WindowSettingsStore } from '../store/WindowSettingsStore'
 
 /**
  * 選單項目 ID
@@ -23,6 +24,8 @@ export class TrayManager {
   private tray: Tray | null = null
   private window: BrowserWindow | null = null
   private menuItems: Map<MenuItemId, MenuItemConfig> = new Map()
+  private windowMode: WindowMode = 'popover'
+  private settingsStore: WindowSettingsStore | null = null
 
   // 事件回呼
   public onStart: (() => void) | null = null
@@ -73,7 +76,7 @@ export class TrayManager {
       show: false,
       frame: false,
       resizable: false,
-      skipTaskbar: true,
+      movable: true,
       alwaysOnTop: true,
       webPreferences: {
         preload: path.join(__dirname, '..', 'preload', 'preload.js'),
@@ -146,9 +149,20 @@ export class TrayManager {
     // 點擊視窗外部時隱藏（開發模式暫時停用以便 debug）
     if (process.env.NODE_ENV !== 'development') {
       window.on('blur', () => {
-        this.hideWindow()
+        // 只有 popover 模式才自動隱藏
+        if (this.windowMode === 'popover') {
+          this.hideWindow()
+        }
       })
     }
+
+    // 監聽視窗移動，儲存浮動位置
+    window.on('moved', () => {
+      if (this.windowMode === 'floating' && this.settingsStore) {
+        const [x, y] = window.getPosition()
+        this.settingsStore.setFloatingPosition({ x, y })
+      }
+    })
 
     return window
   }
@@ -268,8 +282,21 @@ export class TrayManager {
   public showWindow(): void {
     if (!this.window) return
 
-    const position = this.calculateWindowPosition()
-    this.window.setPosition(position.x, position.y)
+    if (this.windowMode === 'floating') {
+      // 浮動模式：使用儲存的位置或螢幕置中
+      const savedPosition = this.settingsStore?.getFloatingPosition()
+      if (savedPosition) {
+        this.window.setPosition(savedPosition.x, savedPosition.y)
+      } else {
+        // 螢幕置中
+        this.window.center()
+      }
+    } else {
+      // Popover 模式：顯示在 Tray 下方
+      const position = this.calculateWindowPosition()
+      this.window.setPosition(position.x, position.y)
+    }
+
     this.window.show()
   }
 
@@ -329,6 +356,39 @@ export class TrayManager {
         this.setMenuItemEnabled('stop', true)
         break
     }
+  }
+
+  /**
+   * 設定設定儲存實例
+   */
+  public setSettingsStore(store: WindowSettingsStore): void {
+    this.settingsStore = store
+    // 載入儲存的模式
+    this.windowMode = store.getMode()
+  }
+
+  /**
+   * 切換釘選模式
+   */
+  public togglePinned(): WindowMode {
+    if (this.windowMode === 'popover') {
+      this.windowMode = 'floating'
+    } else {
+      this.windowMode = 'popover'
+      this.hideWindow()
+    }
+
+    // 儲存設定
+    this.settingsStore?.setMode(this.windowMode)
+
+    return this.windowMode
+  }
+
+  /**
+   * 取得目前視窗模式
+   */
+  public getWindowMode(): WindowMode {
+    return this.windowMode
   }
 
   /**

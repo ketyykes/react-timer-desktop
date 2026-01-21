@@ -4,7 +4,7 @@ if (process.env.NODE_ENV === 'development') {
   process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 }
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import { TrayManager } from './tray/TrayManager'
 import { TimerService } from './timer/TimerService'
@@ -273,6 +273,20 @@ export function initializeServices(): void {
 
   // 註冊歷史記錄視窗 IPC 處理器
   registerHistoryHandlers()
+
+  // 視窗控制 IPC
+  ipcMain.handle(IPC_CHANNELS.WINDOW_PIN, () => {
+    const mode = trayManager?.togglePinned()
+    const window = trayManager?.getWindow()
+    if (window && !window.isDestroyed()) {
+      window.webContents.send(IPC_CHANNELS.WINDOW_MODE_CHANGE, mode)
+    }
+    return mode
+  })
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW_GET_MODE, () => {
+    return trayManager?.getWindowMode() ?? 'popover'
+  })
 }
 
 /**

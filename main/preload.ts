@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
-import { IPC_CHANNELS, TimerData, TimerState, TimerMode, TaskRecord } from '../shared/types'
+import { IPC_CHANNELS, TimerData, TimerState, TimerMode, TaskRecord, WindowMode } from '../shared/types'
 
 /**
  * 計時器狀態變更事件資料
@@ -63,6 +63,16 @@ export const electronAPI = {
   // 歷史記錄視窗
   history: {
     open: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_OPEN),
+  },
+  // 視窗控制
+  window: {
+    togglePin: (): Promise<WindowMode> => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_PIN),
+    getMode: (): Promise<WindowMode> => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_GET_MODE),
+    onModeChange: (callback: (mode: WindowMode) => void): (() => void) => {
+      const handler = (_event: IpcRendererEvent, mode: WindowMode) => callback(mode)
+      ipcRenderer.on(IPC_CHANNELS.WINDOW_MODE_CHANGE, handler)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.WINDOW_MODE_CHANGE, handler)
+    },
   },
   // 版本資訊
   versions: {

@@ -36,6 +36,10 @@ export class TimerIpcHandler {
 
     // 註冊 IPC 事件監聯
     ipcMain.handle(IPC_CHANNELS.TIMER_START, (_event, duration: number, mode: TimerMode = 'countdown') => {
+      // 驗證 duration 為有效的有限正數
+      if (!Number.isFinite(duration) || duration <= 0) {
+        throw new Error('Duration must be a positive finite number')
+      }
       this.timerService.start(duration, mode)
       // 返回初始狀態，不使用 getData()（可能已被 tick 更新）
       return {

@@ -5,6 +5,7 @@ const mockDestroy = vi.fn()
 const mockSetTitle = vi.fn()
 const mockSetToolTip = vi.fn()
 const mockSetContextMenu = vi.fn()
+const mockPopUpContextMenu = vi.fn()
 const mockOn = vi.fn()
 const mockSetImage = vi.fn()
 
@@ -13,6 +14,7 @@ const mockTrayInstance = {
   setTitle: mockSetTitle,
   setToolTip: mockSetToolTip,
   setContextMenu: mockSetContextMenu,
+  popUpContextMenu: mockPopUpContextMenu,
   setImage: mockSetImage,
   on: mockOn,
   getBounds: vi.fn(() => ({ x: 100, y: 0, width: 22, height: 22 })),
@@ -135,15 +137,6 @@ describe('TrayManager', () => {
       expect(mockSetToolTip).toHaveBeenCalledWith('Timer')
     })
 
-    it('應設定 context menu', async () => {
-      const { TrayManager } = await import('../TrayManager')
-      const manager = new TrayManager()
-
-      manager.initialize()
-
-      expect(mockSetContextMenu).toHaveBeenCalled()
-    })
-
     it('應註冊 click 事件', async () => {
       const { TrayManager } = await import('../TrayManager')
       const manager = new TrayManager()
@@ -152,15 +145,31 @@ describe('TrayManager', () => {
 
       expect(mockOn).toHaveBeenCalledWith('click', expect.any(Function))
     })
+
+    it('應註冊 right-click 事件', async () => {
+      const { TrayManager } = await import('../TrayManager')
+      const manager = new TrayManager()
+
+      manager.initialize()
+
+      expect(mockOn).toHaveBeenCalledWith('right-click', expect.any(Function))
+    })
   })
 
   describe('createContextMenu', () => {
-    it('應建立包含正確項目的選單', async () => {
+    it('右鍵點擊應建立包含正確項目的選單', async () => {
       const { Menu } = await import('electron')
       const { TrayManager } = await import('../TrayManager')
       const manager = new TrayManager()
 
       manager.initialize()
+
+      // 取得並執行 right-click 回呼
+      const rightClickCall = mockOn.mock.calls.find(
+        (call) => call[0] === 'right-click'
+      ) as [string, () => void] | undefined
+      const rightClickCallback = rightClickCall?.[1]
+      rightClickCallback?.()
 
       expect(Menu.buildFromTemplate).toHaveBeenCalledWith(
         expect.arrayContaining([
@@ -171,6 +180,7 @@ describe('TrayManager', () => {
           expect.objectContaining({ label: '退出' }),
         ])
       )
+      expect(mockPopUpContextMenu).toHaveBeenCalled()
     })
   })
 
@@ -302,44 +312,89 @@ describe('TrayManager', () => {
 
   describe('updateMenuForState', () => {
     it('idle 狀態應啟用開始、停用暫停和停止', async () => {
+      mockOn.mockClear()
+      const { Menu } = await import('electron')
+      ;(Menu.buildFromTemplate as ReturnType<typeof vi.fn>).mockClear()
       const { TrayManager } = await import('../TrayManager')
       const manager = new TrayManager()
       manager.initialize()
 
       manager.updateMenuForState('idle')
 
-      // 檢查 setContextMenu 被呼叫（表示選單已更新）
-      expect(mockSetContextMenu).toHaveBeenCalled()
+      // 觸發右鍵選單以建立選單
+      const rightClickCall = mockOn.mock.calls.find(
+        (call) => call[0] === 'right-click'
+      ) as [string, () => void] | undefined
+      rightClickCall?.[1]?.()
+
+      // 檢查選單建立時的 enabled 狀態
+      const menuCall = (Menu.buildFromTemplate as ReturnType<typeof vi.fn>).mock.calls[0][0]
+      expect(menuCall.find((item: { label?: string }) => item.label === '開始計時')?.enabled).toBe(true)
+      expect(menuCall.find((item: { label?: string }) => item.label === '暫停')?.enabled).toBe(false)
+      expect(menuCall.find((item: { label?: string }) => item.label === '停止')?.enabled).toBe(false)
     })
 
     it('running 狀態應停用開始、啟用暫停和停止', async () => {
+      mockOn.mockClear()
+      const { Menu } = await import('electron')
+      ;(Menu.buildFromTemplate as ReturnType<typeof vi.fn>).mockClear()
       const { TrayManager } = await import('../TrayManager')
       const manager = new TrayManager()
       manager.initialize()
 
       manager.updateMenuForState('running')
 
-      expect(mockSetContextMenu).toHaveBeenCalled()
+      const rightClickCall = mockOn.mock.calls.find(
+        (call) => call[0] === 'right-click'
+      ) as [string, () => void] | undefined
+      rightClickCall?.[1]?.()
+
+      const menuCall = (Menu.buildFromTemplate as ReturnType<typeof vi.fn>).mock.calls[0][0]
+      expect(menuCall.find((item: { label?: string }) => item.label === '開始計時')?.enabled).toBe(false)
+      expect(menuCall.find((item: { label?: string }) => item.label === '暫停')?.enabled).toBe(true)
+      expect(menuCall.find((item: { label?: string }) => item.label === '停止')?.enabled).toBe(true)
     })
 
     it('overtime 狀態應停用開始、啟用暫停和停止', async () => {
+      mockOn.mockClear()
+      const { Menu } = await import('electron')
+      ;(Menu.buildFromTemplate as ReturnType<typeof vi.fn>).mockClear()
       const { TrayManager } = await import('../TrayManager')
       const manager = new TrayManager()
       manager.initialize()
 
       manager.updateMenuForState('overtime')
 
-      expect(mockSetContextMenu).toHaveBeenCalled()
+      const rightClickCall = mockOn.mock.calls.find(
+        (call) => call[0] === 'right-click'
+      ) as [string, () => void] | undefined
+      rightClickCall?.[1]?.()
+
+      const menuCall = (Menu.buildFromTemplate as ReturnType<typeof vi.fn>).mock.calls[0][0]
+      expect(menuCall.find((item: { label?: string }) => item.label === '開始計時')?.enabled).toBe(false)
+      expect(menuCall.find((item: { label?: string }) => item.label === '暫停')?.enabled).toBe(true)
+      expect(menuCall.find((item: { label?: string }) => item.label === '停止')?.enabled).toBe(true)
     })
 
     it('paused 狀態應啟用開始和停止、停用暫停', async () => {
+      mockOn.mockClear()
+      const { Menu } = await import('electron')
+      ;(Menu.buildFromTemplate as ReturnType<typeof vi.fn>).mockClear()
       const { TrayManager } = await import('../TrayManager')
       const manager = new TrayManager()
       manager.initialize()
 
       manager.updateMenuForState('paused')
 
-      expect(mockSetContextMenu).toHaveBeenCalled()
+      const rightClickCall = mockOn.mock.calls.find(
+        (call) => call[0] === 'right-click'
+      ) as [string, () => void] | undefined
+      rightClickCall?.[1]?.()
+
+      const menuCall = (Menu.buildFromTemplate as ReturnType<typeof vi.fn>).mock.calls[0][0]
+      expect(menuCall.find((item: { label?: string }) => item.label === '開始計時')?.enabled).toBe(true)
+      expect(menuCall.find((item: { label?: string }) => item.label === '暫停')?.enabled).toBe(false)
+      expect(menuCall.find((item: { label?: string }) => item.label === '停止')?.enabled).toBe(true)
     })
   })
 
@@ -477,6 +532,12 @@ describe('TrayManager', () => {
 
       manager.initialize()
 
+      // 觸發右鍵選單以建立選單
+      const rightClickCall = mockOn.mock.calls.find(
+        (call) => call[0] === 'right-click'
+      ) as [string, () => void] | undefined
+      rightClickCall?.[1]?.()
+
       // 取得選單模板並手動觸發 click
       const menuCall = (Menu.buildFromTemplate as ReturnType<typeof vi.fn>).mock.calls[0][0]
       const startItem = menuCall.find((item: { label?: string }) => item.label === '開始計時')
@@ -494,6 +555,12 @@ describe('TrayManager', () => {
 
       manager.initialize()
 
+      // 觸發右鍵選單以建立選單
+      const rightClickCall = mockOn.mock.calls.find(
+        (call) => call[0] === 'right-click'
+      ) as [string, () => void] | undefined
+      rightClickCall?.[1]?.()
+
       const menuCall = (Menu.buildFromTemplate as ReturnType<typeof vi.fn>).mock.calls[0][0]
       const pauseItem = menuCall.find((item: { label?: string }) => item.label === '暫停')
       pauseItem?.click?.()
@@ -509,6 +576,12 @@ describe('TrayManager', () => {
       manager.onStop = mockOnStop
 
       manager.initialize()
+
+      // 觸發右鍵選單以建立選單
+      const rightClickCall = mockOn.mock.calls.find(
+        (call) => call[0] === 'right-click'
+      ) as [string, () => void] | undefined
+      rightClickCall?.[1]?.()
 
       const menuCall = (Menu.buildFromTemplate as ReturnType<typeof vi.fn>).mock.calls[0][0]
       const stopItem = menuCall.find((item: { label?: string }) => item.label === '停止')

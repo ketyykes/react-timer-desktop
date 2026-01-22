@@ -256,16 +256,21 @@ export class TrayManager {
     // 設定 tooltip
     this.tray.setToolTip('Timer')
 
-    // 設定右鍵選單
-    const contextMenu = this.createContextMenu()
-    this.tray.setContextMenu(contextMenu)
+    // 初始化選單項目狀態
+    this.initializeMenuItems()
 
     // 建立視窗
     this.window = this.createWindow()
 
-    // 點擊 Tray 圖示時切換視窗
+    // 左鍵點擊：切換視窗
     this.tray.on('click', () => {
       this.toggleWindow()
+    })
+
+    // 右鍵點擊：顯示選單
+    this.tray.on('right-click', () => {
+      const contextMenu = this.createContextMenu()
+      this.tray?.popUpContextMenu(contextMenu)
     })
   }
 
@@ -327,10 +332,7 @@ export class TrayManager {
     const item = this.menuItems.get(itemId)
     if (item) {
       item.enabled = enabled
-      // 重新建立選單以套用變更
-      if (this.tray) {
-        this.tray.setContextMenu(this.createContextMenu())
-      }
+      // 選單會在右鍵點擊時重新建立，無需在此更新
     }
   }
 

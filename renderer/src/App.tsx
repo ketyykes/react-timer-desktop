@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { X } from 'lucide-react'
 import { Timer } from '@/components/Timer'
 import { TaskDialog } from '@/components/Task/TaskDialog'
 import { TodayTasks } from '@/components/Task/TodayTasks'
@@ -65,6 +66,11 @@ const App = () => {
       const newMode = await api.togglePin()
       setIsPinned(newMode === 'floating')
     }
+  }, [])
+
+  // 處理關閉視窗
+  const handleClose = useCallback(() => {
+    window.electronAPI?.window?.hide()
   }, [])
 
   // 載入今日任務
@@ -173,8 +179,16 @@ const App = () => {
   return (
     <div className="h-full glass-container flex flex-col rounded-xl overflow-hidden">
       {/* 標題列 */}
-      <div className="flex justify-end p-2">
+      <div className="flex justify-end items-center gap-1 p-2">
         <PinButton isPinned={isPinned} onClick={handlePinToggle} />
+        <button
+          type="button"
+          onClick={handleClose}
+          className="p-1.5 rounded-md transition-colors cursor-pointer hover:bg-white/10 active:bg-white/20 text-white/60 hover:text-white/90 focus:outline-none focus:ring-2 focus:ring-white/20"
+          title="關閉"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
       {/* 計時器區塊 (75%) */}

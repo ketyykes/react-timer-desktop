@@ -47,7 +47,8 @@ pnpm dlx shadcn@latest add <component>  # Add shadcn/ui component
 │  ├── timer/            TimerService - timer state machine   │
 │  ├── ipc/              IPC handlers (timer, task)           │
 │  ├── notification/     macOS notifications                  │
-│  └── store/            TaskStore - electron-store persist   │
+│  ├── store/            TaskStore - electron-store persist   │
+│  └── historyWindow.ts  History window management            │
 ├─────────────────────────────────────────────────────────────┤
 │ Shared (shared/)                                            │
 │  └── types.ts          IPC_CHANNELS, TimerState, TaskRecord │
@@ -70,6 +71,7 @@ pnpm dlx shadcn@latest add <component>  # Add shadcn/ui component
 - `timer:tick` - Every second with TimerData
 - `timer:stateChange` - State transitions
 - `timer:complete` - Timer finished
+- `timer:stopFromTray` - Tray stop action triggers TaskDialog in renderer
 
 All channel names are defined in `shared/types.ts` as `IPC_CHANNELS` constant.
 
@@ -104,8 +106,8 @@ import { IPC_CHANNELS } from '../../shared/types'
 - Dark mode via `.dark` class on document
 
 ### Testing
-- **Main process**: Vitest in Node environment, tests in `__tests__/` folders adjacent to source
-- **Renderer**: Vitest + jsdom + @testing-library/react, tests in `src/**/__tests__/`
+- **Main process**: Vitest v3 in Node environment, tests in `__tests__/` folders adjacent to source
+- **Renderer**: Vitest v4 + jsdom + @testing-library/react, tests in `src/**/__tests__/`
 - Coverage threshold: 95% for statements, branches, functions, lines
 - shadcn/ui components (`renderer/src/components/ui/`) are excluded from coverage
 

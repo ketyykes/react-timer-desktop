@@ -128,7 +128,7 @@ export function History() {
           <div key={group.date}>
             <button
               onClick={() => toggleDate(group.date)}
-              className="flex items-center gap-2 w-full py-2 text-left font-medium hover:bg-muted/50 rounded"
+              className="flex items-center gap-2 w-full py-2 text-left font-medium cursor-pointer hover:bg-muted/50 rounded"
             >
               {expandedDates.has(group.date) ? (
                 <ChevronDown className="h-4 w-4" />
@@ -188,14 +188,14 @@ export function History() {
                         </span>
                         <button
                           onClick={() => handleEdit(task)}
-                          className="text-muted-foreground hover:text-blue-600"
+                          className="text-muted-foreground cursor-pointer hover:text-blue-600"
                           aria-label={`編輯 ${task.name}`}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(task.id)}
-                          className="text-muted-foreground hover:text-destructive"
+                          className="text-muted-foreground cursor-pointer hover:text-destructive"
                           aria-label={`刪除 ${task.name}`}
                         >
                           <X className="h-3.5 w-3.5" />

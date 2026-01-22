@@ -70,7 +70,12 @@ export function TodayTasks({ tasks, onUpdate, onDelete, onViewAll }: TodayTasksP
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-white/70">今日</span>
-        <Button variant="link" size="sm" className="h-auto p-0" onClick={onViewAll}>
+        <Button
+          variant="link"
+          size="sm"
+          className="h-auto p-0 text-blue-400 hover:text-blue-300 underline underline-offset-2"
+          onClick={onViewAll}
+        >
           查看全部
         </Button>
       </div>
@@ -139,7 +144,7 @@ export function TodayTasks({ tasks, onUpdate, onDelete, onViewAll }: TodayTasksP
                   <button
                     aria-label="刪除"
                     onClick={() => handleDeleteClick(task.id)}
-                    className="text-white/60 hover:text-red-400"
+                    className="text-white/60 cursor-pointer hover:text-red-400"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>

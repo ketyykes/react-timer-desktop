@@ -287,6 +287,10 @@ export function initializeServices(): void {
   ipcMain.handle(IPC_CHANNELS.WINDOW_GET_MODE, () => {
     return trayManager?.getWindowMode() ?? 'popover'
   })
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW_HIDE, () => {
+    trayManager?.hideWindow()
+  })
 }
 
 /**

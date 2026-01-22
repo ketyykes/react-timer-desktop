@@ -89,6 +89,7 @@ export const IPC_CHANNELS = {
   WINDOW_PIN: 'window:pin',
   WINDOW_MODE_CHANGE: 'window:modeChange',
   WINDOW_GET_MODE: 'window:getMode',
+  WINDOW_HIDE: 'window:hide',
 } as const
 
 /**

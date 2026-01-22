@@ -13,7 +13,7 @@ export function PinButton({ isPinned, onClick, className }: PinButtonProps) {
       type="button"
       onClick={onClick}
       className={cn(
-        'p-1.5 rounded-md transition-colors',
+        'p-1.5 rounded-md transition-colors cursor-pointer',
         'hover:bg-white/10 active:bg-white/20',
         'text-white/60 hover:text-white/90',
         'focus:outline-none focus:ring-2 focus:ring-white/20',

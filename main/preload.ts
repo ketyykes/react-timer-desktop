@@ -68,6 +68,7 @@ export const electronAPI = {
   window: {
     togglePin: (): Promise<WindowMode> => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_PIN),
     getMode: (): Promise<WindowMode> => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_GET_MODE),
+    hide: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_HIDE),
     onModeChange: (callback: (mode: WindowMode) => void): (() => void) => {
       const handler = (_event: IpcRendererEvent, mode: WindowMode) => callback(mode)
       ipcRenderer.on(IPC_CHANNELS.WINDOW_MODE_CHANGE, handler)

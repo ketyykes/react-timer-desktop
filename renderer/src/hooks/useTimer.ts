@@ -36,7 +36,7 @@ export interface UseTimerReturn {
 /**
  * Electron Timer API 型別定義
  */
-interface ElectronTimerAPI {
+export interface ElectronTimerAPI {
   start: (duration: number, mode?: TimerMode) => Promise<TimerData>
   pause: () => Promise<TimerData>
   resume: () => Promise<TimerData>
@@ -45,12 +45,13 @@ interface ElectronTimerAPI {
   onTick: (callback: (data: TimerData) => void) => () => void
   onStateChange: (callback: (data: { previousState: TimerState; currentState: TimerState }) => void) => () => void
   onComplete: (callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => () => void
+  onStopFromTray: (callback: (data: { duration: number; actualElapsed: number; mode: TimerMode }) => void) => () => void
 }
 
 /**
  * Electron Task API 型別定義
  */
-interface ElectronTaskAPI {
+export interface ElectronTaskAPI {
   save: (task: Omit<TaskRecord, 'id' | 'createdAt'>) => Promise<TaskRecord>
   getAll: () => Promise<TaskRecord[]>
   delete: (id: string) => Promise<void>
@@ -60,8 +61,23 @@ interface ElectronTaskAPI {
 /**
  * Electron History API 型別定義
  */
-interface ElectronHistoryAPI {
+export interface ElectronHistoryAPI {
   open: () => void
+}
+
+/**
+ * 視窗模式型別
+ */
+export type WindowMode = 'popover' | 'floating'
+
+/**
+ * Electron Window API 型別定義
+ */
+export interface ElectronWindowAPI {
+  togglePin: () => Promise<WindowMode>
+  getMode: () => Promise<WindowMode>
+  hide: () => Promise<void>
+  onModeChange: (callback: (mode: WindowMode) => void) => () => void
 }
 
 declare global {
@@ -70,6 +86,7 @@ declare global {
       timer: ElectronTimerAPI
       task: ElectronTaskAPI
       history: ElectronHistoryAPI
+      window: ElectronWindowAPI
     }
   }
 }
